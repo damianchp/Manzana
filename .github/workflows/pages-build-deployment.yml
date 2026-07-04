@@ -50,10 +50,11 @@ jobs:
           if [ ! -f pages-artifact/index.html ]; then echo "WARNING: pages-artifact/index.html not found"; fi
 
       - name: Upload artifact for Pages
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: pages-artifact
           artifact_name: github-pages
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v5
+
