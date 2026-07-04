@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>My Tasks</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1d2733">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+  --ink:#1d2733;
+  --ink-soft:#4a5568;
+  --ink-faint:#8a94a3;
+  --paper:#f6f7f9;
+  --card:#ffffff;
+  --line:#e4e8ee;
+  --accent:#f25d52;        /* Asana-family coral, anchors the product identity */
+  --accent-soft:#fdeceb;
+  --hi:#e8384f;  --hi-bg:#fdebee;
+  --md:#e08c00;  --md-bg:#fdf3e3;
+  --lo:#5a7dde;  --lo-bg:#eef2fc;
+  --sync:#12a594; --sync-bg:#e6f6f3;
+  --gcal:#4285f4;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(29,39,51,.06),0 4px 14px rgba(29,39,51,.06);
+  font-size:15px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Instrument Sans',system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+/* ---------- Top bar ---------- */
+header.topbar{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 20px;background:var(--ink);color:#f4f6f9;
+  position:sticky;top:0;z-index:40;
+}
+.logo{display:flex;align-items:center;gap:9px;font-family:'Sora';font-weight:700;font-size:1.05rem;letter-spacing:-.01em}
+.logo .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(242,93,82,.25)}
+.topbar .sub{font-size:.78rem;color:#9aa7b6;font-weight:400}
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.chip-btn{
+  font-size:.78rem;font-weight:600;padding:6px 12px;border-radius:99px;
+  background:rgba(255,255,255,.1);color:#e7ecf2;transition:background .15s;
+}
+.chip-btn:hover{background:rgba(255,255,255,.2)}
+
+/* ---------- Weekly focus banner ---------- */
+.focus-banner{
+  background:linear-gradient(90deg,#1d2733 0%,#2b3a4d 100%);
+  color:#f4f6f9;padding:10px 20px;display:flex;align-items:center;gap:12px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.focus-banner .label{
+  font-family:'Sora';font-size:.66rem;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--accent);white-space:nowrap;
+}
+.focus-banner input{
+  flex:1;background:transparent;border:none;color:#f4f6f9;font-size:.95rem;
+  font-weight:500;border-bottom:1px dashed transparent;padding:2px 0;
+}
+.focus-banner input:hover,.focus-banner input:focus{border-bottom-color:rgba(255,255,255,.35);outline:none}
+
+/* ---------- Toolbar ---------- */
+.toolbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:14px 20px 10px;
+}
+.view-tabs{display:flex;background:#eceff3;border-radius:99px;padding:3px}
+.view-tabs button{
+  padding:7px 16px;border-radius:99px;font-size:.85rem;font-weight:600;color:var(--ink-soft);
+  transition:all .15s;
+}
+.view-tabs button.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.view-tabs button .badge{
+  display:inline-block;margin-left:6px;font-size:.65rem;font-weight:700;
+  background:var(--sync-bg);color:var(--sync);padding:1px 6px;border-radius:99px;
+}
+.toolbar .spacer{flex:1}
+.sort-wrap{display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--ink-soft)}
+.sort-wrap select{
+  border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--card);
+  font-size:.82rem;font-weight:500;
+}
+.quickadd{
+  display:flex;gap:8px;padding:0 20px 6px;
+}
+.quickadd input[type=text]{
+  flex:1;border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;
+  background:var(--card);font-size:.92rem;
+}
+.quickadd input[type=text]::placeholder{color:var(--ink-faint)}
+.quickadd .add-btn{
+  background:var(--accent);color:#fff;font-weight:600;font-size:.88rem;
+  padding:0 18px;border-radius:var(--radius);transition:filter .15s;
+}
+.quickadd .add-btn:hover{filter:brightness(1.06)}
+
+main{padding:8px 20px 60px;max-width:1200px;margin:0 auto}
+
+/* ---------- List view ---------- */
+.section-block{margin-bottom:22px}
+.section-head{
+  display:flex;align-items:center;gap:8px;margin-bottom:6px;
+  font-family:'Sora';font-weight:600;font-size:.92rem;
+}
+.section-head .count{font-family:'Instrument Sans';font-weight:500;font-size:.75rem;color:var(--ink-faint)}
+.task-row{
+  display:flex;align-items:center;gap:10px;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:10px 14px;margin-bottom:6px;cursor:pointer;transition:box-shadow .15s,border-color .15s;
+}
+.task-row:hover{box-shadow:var(--shadow);border-color:#d3dae3}
+.task-row.done{opacity:.5}
+.task-row.done .t-title{text-decoration:line-through}
+.checkbox{
+  width:19px;height:19px;min-width:19px;border:1.6px solid #b7c0cc;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;background:none;
+}
+.checkbox:hover{border-color:var(--sync);color:var(--sync)}
+.checkbox.checked{background:var(--sync);border-color:var(--sync);color:#fff}
+.checkbox svg{width:11px;height:11px}
+.t-title{flex:1;font-size:.92rem;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{
+  font-size:.7rem;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;
+}
+.pill.project{background:#eef1f5;color:var(--ink-soft)}
+.pill.p-high{background:var(--hi-bg);color:var(--hi)}
+.pill.p-medium{background:var(--md-bg);color:var(--md)}
+.pill.p-low{background:var(--lo-bg);color:var(--lo)}
+.pill.synced{background:var(--sync-bg);color:var(--sync)}
+.t-due{font-size:.78rem;font-weight:500;color:var(--ink-faint);white-space:nowrap;min-width:64px;text-align:right}
+.t-due.overdue{color:var(--hi);font-weight:600}
+.t-due.today{color:var(--sync);font-weight:600}
+.empty-note{font-size:.82rem;color:var(--ink-faint);padding:8px 4px}
+
+/* ---------- Board view ---------- */
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;align-items:start}
+.board-col{background:#eef0f4;border-radius:14px;padding:10px;min-height:120px}
+.board-col.dragover{outline:2px dashed var(--accent);outline-offset:-2px}
+.board-col h3{font-family:'Sora';font-size:.84rem;font-weight:600;padding:4px 6px 10px;display:flex;gap:6px;align-items:center}
+.board-card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:10px 12px;margin-bottom:8px;cursor:grab;box-shadow:0 1px 2px rgba(29,39,51,.05);
+}
+.board-card:active{cursor:grabbing}
+.board-card .bc-title{font-size:.88rem;font-weight:500;margin-bottom:7px}
+.board-card .bc-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.board-card.done{opacity:.5}
+.board-card.done .bc-title{text-decoration:line-through}
+
+/* ---------- Calendar view ---------- */
+.cal-layout{display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:start}
+@media(max-width:800px){.cal-layout{grid-template-columns:1fr}}
+.unsched{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;
+}
+.unsched h3{font-family:'Sora';font-size:.82rem;font-weight:600;margin-bottom:4px}
+.unsched p.hint{font-size:.72rem;color:var(--ink-faint);margin-bottom:10px;line-height:1.4}
+.unsched .board-card{margin-bottom:6px;padding:8px 10px}
+.cal-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.cal-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.cal-head h3{font-family:'Sora';font-size:.98rem;font-weight:600;flex:1}
+.cal-nav{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1rem;background:var(--card)}
+.cal-nav:hover{background:var(--paper)}
+.cal-legend{display:flex;gap:12px;font-size:.68rem;color:var(--ink-faint);padding:8px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cal-legend .key{display:flex;align-items:center;gap:5px}
+.cal-legend .swatch{width:9px;height:9px;border-radius:3px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.cal-dow{font-size:.66rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);text-align:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.cal-cell{
+  min-height:92px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding:5px;position:relative;min-width:0;overflow:hidden;
+}
+.cal-cell:nth-child(7n){border-right:none}
+.cal-cell.other{background:#fafbfc;color:var(--ink-faint)}
+.cal-cell.today-cell{background:#fbf3f2}
+.cal-cell .daynum{font-size:.72rem;font-weight:600;padding:1px 4px;display:inline-block;border-radius:6px}
+.cal-cell.today-cell .daynum{background:var(--accent);color:#fff}
+.cal-cell.dragover{outline:2px dashed var(--accent);outline-offset:-3px;background:var(--accent-soft)}
+.cal-chip{
+  display:block;width:100%;max-width:100%;box-sizing:border-box;text-align:left;font-size:.68rem;font-weight:600;
+  padding:2px 6px;border-radius:5px;margin-top:3px;cursor:grab;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid transparent;
+}
+.cal-chip.p-high{background:var(--hi-bg);color:var(--hi)}
+.cal-chip.p-medium{background:var(--md-bg);color:var(--md)}
+.cal-chip.p-low{background:var(--lo-bg);color:var(--lo)}
+.cal-chip.p-none{background:#eef1f5;color:var(--ink-soft)}
+.cal-chip.done{opacity:.45;text-decoration:line-through}
+.cal-chip.gcal-event{
+  background:#fff;border:1.4px dashed var(--gcal);color:var(--gcal);cursor:default;
+}
+
+/* ---------- Sync pipeline view (signature) ---------- */
+.sync-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media(max-width:860px){.sync-grid{grid-template-columns:1fr}}
+.sync-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.sync-card h3{font-family:'Sora';font-size:.95rem;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.sync-card p.desc{font-size:.8rem;color:var(--ink-soft);line-height:1.5;margin-bottom:14px}
+.dir-tag{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:99px}
+.dir-tag.oneway{background:var(--sync-bg);color:var(--sync)}
+.dir-tag.rules{background:#e8f0fe;color:var(--gcal)}
+.pipeline{
+  display:flex;align-items:center;gap:0;margin:6px 0 16px;
+}
+.pipe-node{
+  flex:1;text-align:center;padding:12px 8px;border-radius:12px;font-size:.78rem;font-weight:600;
+}
+.pipe-node.asana{background:var(--accent-soft);color:var(--accent)}
+.pipe-node.gcal{background:#e8f0fe;color:var(--gcal)}
+.pipe-node small{display:block;font-weight:400;font-size:.66rem;margin-top:2px;color:var(--ink-faint)}
+.pipe-flow{
+  flex:1.2;height:2px;position:relative;margin:0 -4px;
+  background-image:linear-gradient(90deg,var(--sync) 55%,transparent 45%);
+  background-size:12px 2px;
+}
+.pipe-flow.animate{animation:flow 1s linear infinite}
+@keyframes flow{to{background-position:12px 0}}
+@media(prefers-reduced-motion:reduce){.pipe-flow.animate{animation:none}}
+.pipe-flow::after{
+  content:"→";position:absolute;right:-4px;top:-11px;color:var(--sync);font-size:.9rem;
+}
+.ics-preview{
+  font-family:'JetBrains Mono',monospace;font-size:.68rem;line-height:1.55;
+  background:#141a21;color:#a9c7b8;border-radius:10px;padding:12px 14px;
+  max-height:210px;overflow:auto;white-space:pre;margin-bottom:12px;
+}
+.ics-preview .hl{color:#f2b56b}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  font-size:.82rem;font-weight:600;padding:9px 16px;border-radius:9px;transition:filter .15s;
+}
+.btn.primary{background:var(--sync);color:#fff}
+.btn.blue{background:var(--gcal);color:#fff}
+.btn.ghost{border:1px solid var(--line);background:var(--card);color:var(--ink-soft)}
+.btn:hover{filter:brightness(1.05)}
+.feed-url{
+  font-family:'JetBrains Mono',monospace;font-size:.68rem;background:var(--paper);
+  border:1px dashed var(--line);border-radius:8px;padding:8px 10px;margin-bottom:12px;
+  color:var(--ink-soft);overflow-wrap:anywhere;
+}
+.rule-item{
+  display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--line);
+  border-radius:10px;margin-bottom:10px;
+}
+.rule-item .rule-text{flex:1;font-size:.82rem;line-height:1.45}
+.rule-item .rule-text b{font-weight:600}
+.rule-item code{
+  font-family:'JetBrains Mono',monospace;font-size:.72rem;background:var(--paper);
+  padding:1px 5px;border-radius:4px;border:1px solid var(--line);
+}
+.switch{position:relative;width:38px;height:22px;min-width:38px}
+.switch input{opacity:0;width:0;height:0}
+.switch .track{
+  position:absolute;inset:0;background:#cfd6df;border-radius:99px;transition:background .15s;cursor:pointer;
+}
+.switch .track::after{
+  content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;
+  background:#fff;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.25);
+}
+.switch input:checked + .track{background:var(--sync)}
+.switch input:checked + .track::after{transform:translateX(16px)}
+.log-list{max-height:230px;overflow:auto}
+.log-entry{
+  font-size:.76rem;padding:8px 10px;border-left:3px solid var(--sync);background:var(--paper);
+  border-radius:0 8px 8px 0;margin-bottom:6px;line-height:1.45;
+}
+.log-entry.rule{border-left-color:var(--gcal)}
+.log-entry time{display:block;font-size:.64rem;color:var(--ink-faint);font-family:'JetBrains Mono',monospace}
+.arch-note{
+  grid-column:1/-1;background:var(--ink);color:#c7d1dd;border-radius:14px;padding:18px 20px;
+  font-size:.82rem;line-height:1.65;
+}
+.arch-note h3{font-family:'Sora';color:#fff;font-size:.9rem;margin-bottom:8px}
+.arch-note b{color:#fff}
+.arch-note .k{color:var(--accent)}
+
+/* ---------- Task drawer ---------- */
+.drawer-scrim{position:fixed;inset:0;background:rgba(20,26,33,.35);z-index:60;opacity:0;pointer-events:none;transition:opacity .2s}
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:min(400px,94vw);background:var(--card);
+  z-index:61;box-shadow:-10px 0 40px rgba(20,26,33,.18);transform:translateX(105%);
+  transition:transform .22s ease;display:flex;flex-direction:column;
+}
+body.drawer-open .drawer{transform:none}
+body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
+.drawer-head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.drawer-head h3{font-family:'Sora';font-size:.95rem;flex:1}
+.drawer-body{padding:18px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:14px}
+.field label{display:block;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:5px}
+.field input,.field select,.field textarea{
+  width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--card);font-size:.9rem;
+}
+.field textarea{resize:vertical;min-height:70px}
+.drawer-foot{padding:14px 18px;border-top:1px solid var(--line);display:flex;gap:8px}
+.btn.danger{background:var(--hi-bg);color:var(--hi)}
+.btn.accent{background:var(--accent);color:#fff;flex:1}
+.icon-btn{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint)}
+.icon-btn:hover{background:var(--paper);color:var(--ink)}
+
+/* ---------- Google connect pill (topbar) ---------- */
+.gpill{
+  display:flex;align-items:center;gap:6px;font-size:.76rem;font-weight:600;
+  padding:5px 10px 5px 6px;border-radius:99px;background:rgba(255,255,255,.1);color:#e7ecf2;
+}
+.gpill .dot2{width:7px;height:7px;border-radius:50%;background:#8a94a3}
+.gpill.on .dot2{background:#4ec9a3}
+.gpill button{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+
+/* ---------- Subtasks ---------- */
+.pill.progress{background:#eef1f5;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.pill.progress.complete{background:var(--sync-bg);color:var(--sync)}
+.sub-list{display:flex;flex-direction:column;gap:2px}
+.sub-item{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:8px}
+.sub-item:hover{background:var(--paper)}
+.sub-item .checkbox{width:16px;height:16px;min-width:16px}
+.sub-item .sub-text{flex:1;font-size:.87rem;border:none;background:transparent;padding:2px 0}
+.sub-item.done .sub-text{text-decoration:line-through;color:var(--ink-faint)}
+.sub-item .sub-del{color:var(--ink-faint);font-size:.85rem;opacity:0;transition:opacity .12s;padding:2px 6px;border-radius:6px}
+.sub-item:hover .sub-del{opacity:1}
+.sub-item .sub-del:hover{color:var(--hi);background:var(--hi-bg)}
+.sub-add{display:flex;gap:6px;margin-top:6px}
+.sub-add input{flex:1;border:1px dashed var(--line);border-radius:8px;padding:7px 10px;font-size:.85rem;background:var(--paper)}
+.sub-add button{background:var(--accent);color:#fff;font-weight:600;font-size:.78rem;padding:0 13px;border-radius:8px}
+.sub-progress-bar{height:4px;background:#eef1f5;border-radius:99px;overflow:hidden;margin:6px 0 2px}
+.sub-progress-bar .fill{height:100%;background:var(--sync);border-radius:99px;transition:width .25s}
+
+/* ---------- Cloud sync card ---------- */
+.cloud-card .status-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.status-dot{width:9px;height:9px;border-radius:50%;background:#cfd6df}
+.status-dot.on{background:var(--sync)}
+.status-dot.warn{background:var(--md)}
+.setup-steps{font-size:.78rem;color:var(--ink-soft);line-height:1.7;margin-bottom:12px;padding-left:18px}
+.setup-steps li{margin-bottom:2px}
+.setup-steps code{font-family:'JetBrains Mono',monospace;font-size:.72rem;background:var(--paper);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+
+/* ---------- Toast ---------- */
+#toast{
+  position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);z-index:80;
+  background:var(--ink);color:#fff;font-size:.82rem;font-weight:500;
+  padding:10px 18px;border-radius:99px;opacity:0;pointer-events:none;transition:all .25s;
+  max-width:90vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo"><span class="dot"></span>My Tasks <span class="sub">· Asana architecture demo</span></div>
+  <div class="topbar-right">
+    <span class="gpill" id="gPill"><span class="dot2"></span><span id="gPillText">Google: not connected</span></span>
+    <button class="chip-btn" id="btnExportJson" title="Download full app state as JSON">Export JSON</button>
+    <button class="chip-btn" id="btnImportJson">Import JSON</button>
+    <input type="file" id="importFile" accept=".json" hidden>
+  </div>
+</header>
+
+<div class="focus-banner">
+  <span class="label">Weekly focus</span>
+  <input id="weeklyFocus" type="text" placeholder="Set your one core objective for this week…" aria-label="Weekly focus">
+</div>
+
+<div class="toolbar">
+  <div class="view-tabs" role="tablist">
+    <button data-view="list" class="active" role="tab">List</button>
+    <button data-view="board" role="tab">Board</button>
+    <button data-view="calendar" role="tab">Calendar</button>
+    <button data-view="sync" role="tab">Sync<span class="badge" id="syncBadge">0</span></button>
+  </div>
+  <div class="spacer"></div>
+  <div class="sort-wrap" id="sortWrap">
+    <span>Sort:</span>
+    <select id="sortSelect" aria-label="Sort tasks">
+      <option value="none">Sections (default)</option>
+      <option value="priority">Priority → due date</option>
+      <option value="due">Due date</option>
+    </select>
+  </div>
+</div>
+
+<div class="quickadd">
+  <input type="text" id="quickAddInput" placeholder="Add a task… tip: end with !high / !med / !low and a date like ‘jul 10’">
+  <button class="add-btn" id="quickAddBtn">Add task</button>
+</div>
+
+<main id="main"></main>
+
+<div class="drawer-scrim" id="drawerScrim"></div>
+<aside class="drawer" id="drawer" aria-label="Task details">
+  <div class="drawer-head">
+    <h3>Task details</h3>
+    <button class="icon-btn" id="drawerClose" aria-label="Close">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="field"><label>Title</label><input id="dTitle" type="text"></div>
+    <div class="field"><label>Project</label><input id="dProject" type="text" placeholder="e.g. Job search"></div>
+    <div class="field"><label>Priority (custom field)</label>
+      <select id="dPriority">
+        <option value="">— None —</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    <div class="field"><label>Start date</label><input id="dStart" type="date"></div>
+    <div class="field"><label>Due date</label><input id="dDue" type="date"></div>
+    <div class="field"><label>Section</label>
+      <select id="dSection">
+        <option value="recent">Recently assigned</option>
+        <option value="today">Today</option>
+        <option value="upcoming">Upcoming</option>
+        <option value="later">Later</option>
+      </select>
+    </div>
+    <div class="field"><label>Subtasks <span id="subCount" style="text-transform:none;letter-spacing:0"></span></label>
+      <div class="sub-progress-bar"><div class="fill" id="subFill" style="width:0%"></div></div>
+      <div class="sub-list" id="subList"></div>
+      <div class="sub-add">
+        <input id="subNewInput" type="text" placeholder="Add a subtask… (Enter)">
+        <button id="subNewBtn">Add</button>
+      </div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="dNotes"></textarea></div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn danger" id="dDelete">Delete</button>
+    <button class="btn accent" id="dSave">Save changes</button>
+  </div>
+</aside>
+
+<div id="toast" role="status"></div>
+<script>
+/* =====================================================================
+   ASANA ARCHITECTURE DEMO — data model, views, sorting, calendar,
+   external-calendar sync (one-way ICS feed + two-way rules engine)
+   ===================================================================== */
+
+/* ---------- Persistence adapter ----------
+   Order of preference:
+   1. window.storage  (Claude artifact environment)
+   2. localStorage    (when this file is opened directly in a browser)
+   3. in-memory       (fallback) */
+const KEY = 'asana-demo-state-v1';
+const store = {
+  mem: null,
+  async load(){
+    try{ if(window.storage){ const r = await window.storage.get(KEY); if(r&&r.value) return JSON.parse(r.value); } }catch(e){}
+    try{ const v = localStorage.getItem(KEY); if(v) return JSON.parse(v); }catch(e){}
+    return this.mem;
+  },
+  async save(state){
+    const v = JSON.stringify(state);
+    this.mem = state;
+    try{ if(window.storage){ await window.storage.set(KEY, v); return; } }catch(e){}
+    try{ localStorage.setItem(KEY, v); }catch(e){}
+  }
+};
+
+/* ---------- Helpers ---------- */
+const uid = () => Math.random().toString(36).slice(2,10);
+const pad = n => String(n).padStart(2,'0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const todayISO = () => iso(new Date());
+const addDays = (base, n) => { const d = new Date(base); d.setDate(d.getDate()+n); return iso(d); };
+const fmtDue = s => {
+  if(!s) return '';
+  const d = new Date(s+'T00:00'); const t = new Date(todayISO()+'T00:00');
+  const diff = Math.round((d-t)/86400000);
+  if(diff===0) return 'Today';
+  if(diff===1) return 'Tomorrow';
+  if(diff===-1) return 'Yesterday';
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+};
+const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const PRI_ORDER = {high:0, medium:1, low:2, '':3, null:3, undefined:3};
+const PRI_LABEL = {high:'High', medium:'Medium', low:'Low'};
+
+/* ---------- Seed data (embedded JSON) ---------- */
+function seedState(){
+  const T = todayISO();
+  return {
+    weeklyFocus: 'Land one industry interview — everything else supports this.',
+    view: 'list',
+    sort: 'none',
+    calMonth: T.slice(0,7),
+    rules: {
+      highToEvent: true,     // Rule: priority → High creates a GCal placeholder event
+      completeMarks: true    // Rule: completing a task annotates its synced event
+    },
+    syncLog: [],
+    externalEvents: [],      // events living on the simulated Google Calendar (fallback demo mode)
+    google: {
+      clientId: '',          // OAuth Client ID (public, safe to store) — paste your own in Sync tab
+      connected: false,
+      lastSynced: null
+    },
+    updatedAt: Date.now(),
+    tasks: [
+      {id:uid(), title:'Follow up on pharma biostatistician application', project:'Job search', priority:'high',   start:null, due:T,            section:'today',    done:false, notes:'Check status; reference the team you interviewed with.',
+       subtasks:[{id:uid(),text:'Re-read job posting for keywords',done:true},{id:uid(),text:'Draft 3-line follow-up email',done:false},{id:uid(),text:'Send before Friday 12:00',done:false}]},
+      {id:uid(), title:'Revise Discussion section — cohort manuscript', project:'Research', priority:'high', start:addDays(T,-2), due:addDays(T,1), section:'today', done:false, notes:'Target journal: TBD.',
+       subtasks:[{id:uid(),text:'Address reviewer point on imputation',done:false},{id:uid(),text:'Tighten limitations paragraph',done:false}]},
+      {id:uid(), title:'Tailor CV for target role', project:'Job search', priority:'medium', start:null, due:addDays(T,2), section:'upcoming', done:false, notes:''},
+      {id:uid(), title:'Backtest breakout strategy on recent data', project:'Trading', priority:'medium', start:null, due:addDays(T,4), section:'upcoming', done:false, notes:'Static levels only — no lagging indicators.'},
+      {id:uid(), title:'Handle a personal admin errand', project:'Personal', priority:'high', start:null, due:addDays(T,3), section:'upcoming', done:false, notes:''},
+      {id:uid(), title:'Draft networking event recap post', project:'IDCN', priority:'low', start:null, due:addDays(T,7), section:'later', done:false, notes:''},
+      {id:uid(), title:'Upload analysis code to GitHub once cleared', project:'Research', priority:'low', start:null, due:null, section:'later', done:false, notes:''},
+      {id:uid(), title:'Review LinkedIn profile analytics', project:'Job search', priority:null, start:null, due:null, section:'recent', done:false, notes:''},
+      {id:uid(), title:'Send thank-you note after informational chat', project:'Job search', priority:'medium', start:null, due:addDays(T,-1), section:'today', done:false, notes:''}
+    ]
+  };
+}
+
+let S = null;           // app state
+let editingId = null;   // task open in drawer
+
+/* Runtime-only Google auth state — never persisted (tokens shouldn't be saved to disk/Drive) */
+const SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.appdata';
+const gAuth = { tokenClient:null, accessToken:null, expiresAt:0, pendingResolve:null, pendingReject:null };
+const DRIVE_FILE_NAME = 'asana-demo-state.json';
+let driveSaveTimer = null;
+
+async function init(){
+  S = await store.load() || seedState();
+  if(!S.calMonth) S.calMonth = todayISO().slice(0,7);
+  if(!S.google) S.google = {clientId:'', connected:false, lastSynced:null};
+  S.tasks.forEach(t => { if(!Array.isArray(t.subtasks)) t.subtasks = []; });
+  bindStatic();
+  render();
+  if(S.google.connected && S.google.clientId){
+    try{
+      await ensureToken(true);           // silent — no popup
+      await driveMergeOnLoad();          // pull newer remote state if present
+      updateGooglePill();
+      render();
+    }catch(e){
+      S.google.connected = false;        // silent refresh failed — needs a manual reconnect
+      updateGooglePill();
+    }
+  }
+  updateGooglePill();
+}
+
+function save(){
+  S.updatedAt = Date.now();
+  store.save(S);
+  if(S.google.connected) scheduleDriveSave();
+}
+
+/* ---------- Rules engine (simulated two-way Google Calendar integration) ----------
+   Mirrors Asana's "Google Calendar with Rules": task-side triggers create or
+   annotate events on the external calendar. One-way feed is handled by ICS. */
+function log(msg, kind){
+  S.syncLog.unshift({t:new Date().toLocaleString(), msg, kind:kind||'sync'});
+  S.syncLog = S.syncLog.slice(0,60);
+}
+function fireRules(task, change){
+  const live = S.google.connected && S.google.clientId; // real API vs. local simulation
+  if(change==='priority' && task.priority==='high' && S.rules.highToEvent){
+    if(live){
+      if(!task.gcalEventId) gcalCreateEvent(task).then(render).catch(e=>{console.error(e); toast('Calendar API call failed — check console');});
+      return;
+    }
+    const date = task.due || addDays(todayISO(),1);
+    const exists = S.externalEvents.some(e => e.taskId===task.id);
+    if(!exists){
+      S.externalEvents.push({id:uid(), taskId:task.id, title:'⏰ '+task.title, date, source:'rule'});
+      log(`Rule fired (simulated): “${task.title}” → priority High → placeholder event created (${fmtDue(date)})`, 'rule');
+      toast('Rule fired: calendar placeholder created');
+    }
+  }
+  if(change==='completed' && task.done && S.rules.completeMarks){
+    if(live){ gcalDeleteOrMarkDone(task).then(render).catch(e=>console.error(e)); return; }
+    const ev = S.externalEvents.find(e => e.taskId===task.id);
+    if(ev && !ev.title.startsWith('✓')){
+      ev.title = '✓ ' + ev.title.replace(/^⏰ /,'');
+      log(`Rule fired (simulated): “${task.title}” completed → linked event marked done`, 'rule');
+    }
+  }
+  if(change==='due'){
+    if(live){ gcalPatchEvent(task, { start:{date:task.due}, end:{date:addDays(task.due,1)} }).then(render).catch(e=>console.error(e)); return; }
+    const ev = S.externalEvents.find(e => e.taskId===task.id);
+    if(ev && task.due){
+      ev.date = task.due;
+      log(`Data sync (simulated): due date change on “${task.title}” pushed to its event`, 'sync');
+    }
+  }
+}
+
+/* ---------- ICS generation (one-way "Sync to Calendar" feed) ---------- */
+function buildICS(){
+  const stamp = new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//AsanaDemo//MyTasks//EN',
+    'X-WR-CALNAME:My Tasks (Asana demo)','CALSCALE:GREGORIAN'];
+  S.tasks.filter(t => t.due && !t.done).forEach(t => {
+    const d = t.due.replace(/-/g,'');
+    const end = t.due ? addDays(t.due,1).replace(/-/g,'') : d;
+    const pri = t.priority ? ` [${PRI_LABEL[t.priority]}]` : '';
+    lines.push('BEGIN:VEVENT',
+      `UID:${t.id}@asana-demo`,
+      `DTSTAMP:${stamp}`,
+      `DTSTART;VALUE=DATE:${d}`,
+      `DTEND;VALUE=DATE:${end}`,
+      `SUMMARY:${(t.title+pri).replace(/([,;\\])/g,'\\$1')}`,
+      `DESCRIPTION:Project: ${t.project||'—'}\\nOpens as all-day event (Asana one-way feed behaviour)`,
+      'TRANSP:TRANSPARENT','END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+
+/* =====================================================================
+   REAL GOOGLE INTEGRATION — Google Identity Services (client-side OAuth,
+   no backend/secret) + Calendar API (two-way) + Drive appDataFolder
+   (cross-device state sync). All calls run directly from the browser,
+   which is what makes this deployable as a static GitHub Pages site.
+   ===================================================================== */
+
+function updateGooglePill(){
+  const pill = document.getElementById('gPill');
+  const txt = document.getElementById('gPillText');
+  if(!pill) return;
+  pill.classList.toggle('on', !!S.google.connected);
+  txt.textContent = S.google.connected ? 'Google: connected' : 'Google: not connected';
+}
+
+function ensureTokenClient(){
+  if(!S.google.clientId) throw new Error('No Client ID configured yet — add one in the Sync tab.');
+  if(!window.google || !google.accounts || !google.accounts.oauth2) throw new Error('Google Identity Services script has not loaded yet — check your network/ad-blocker and reload.');
+  if(!gAuth.tokenClient || gAuth._forClientId !== S.google.clientId){
+    gAuth.tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: S.google.clientId,
+      scope: SCOPES,
+      callback: (resp) => {
+        if(resp && resp.access_token){
+          gAuth.accessToken = resp.access_token;
+          gAuth.expiresAt = Date.now() + (Number(resp.expires_in||3300)*1000);
+          if(gAuth.pendingResolve) gAuth.pendingResolve(resp.access_token);
+        } else {
+          if(gAuth.pendingReject) gAuth.pendingReject(new Error('No access token returned'));
+        }
+        gAuth.pendingResolve = null; gAuth.pendingReject = null;
+      },
+      error_callback: (err) => { if(gAuth.pendingReject) gAuth.pendingReject(err); gAuth.pendingResolve=null; gAuth.pendingReject=null; }
+    });
+    gAuth._forClientId = S.google.clientId;
+  }
+  return gAuth.tokenClient;
+}
+
+/* Returns a valid access token, requesting a new one only if the cached
+   one is missing/expired. silent=true uses prompt:'' (no popup) — used
+   for auto-refresh; silent=false is the user-initiated "Connect" click. */
+function ensureToken(silent){
+  return new Promise((resolve, reject) => {
+    if(gAuth.accessToken && Date.now() < gAuth.expiresAt - 60000) return resolve(gAuth.accessToken);
+    let client;
+    try{ client = ensureTokenClient(); }catch(e){ return reject(e); }
+    gAuth.pendingResolve = resolve; gAuth.pendingReject = reject;
+    client.requestAccessToken({ prompt: silent ? '' : 'consent' });
+  });
+}
+
+async function connectGoogle(){
+  if(!S.google.clientId){ toast('Paste your Google OAuth Client ID first (Sync tab)'); return; }
+  try{
+    await ensureToken(false);       // user gesture → real consent popup on first run
+    S.google.connected = true;
+    save();
+    toast('Google connected');
+    await driveMergeOnLoad();
+    render();
+  }catch(e){
+    toast('Google connect failed — see console for details');
+    console.error(e);
+  }
+  updateGooglePill();
+}
+
+function disconnectGoogle(){
+  const tok = gAuth.accessToken;
+  if(tok && window.google) google.accounts.oauth2.revoke(tok, () => {});
+  gAuth.accessToken = null; gAuth.expiresAt = 0;
+  S.google.connected = false;
+  save(); updateGooglePill(); render();
+  toast('Google disconnected');
+}
+
+/* ---------- Calendar API (two-way) ----------
+   Replaces the simulated externalEvents/rules pipeline with real
+   events.insert / patch / delete calls against the user's primary
+   calendar, once connected. */
+async function gcalRequest(method, path, body){
+  const token = await ensureToken(true);
+  const res = await fetch(`https://www.googleapis.com/calendar/v3${path}`, {
+    method, headers:{ 'Authorization':`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if(!res.ok) throw new Error(`Calendar API ${method} ${path} → ${res.status}`);
+  return res.status===204 ? null : res.json();
+}
+async function gcalCreateEvent(task){
+  const date = task.due || addDays(todayISO(),1);
+  const ev = await gcalRequest('POST','/calendars/primary/events', {
+    summary: '⏰ ' + task.title,
+    description: `Created by My Tasks rule: priority → High\nProject: ${task.project||'—'}`,
+    start:{date}, end:{date: addDays(date,1)}
+  });
+  task.gcalEventId = ev.id;
+  log(`Real Calendar API: created event for “${task.title}” on ${fmtDue(date)}`,'rule');
+}
+async function gcalPatchEvent(task, fields){
+  if(!task.gcalEventId) return;
+  await gcalRequest('PATCH', `/calendars/primary/events/${task.gcalEventId}`, fields);
+  log(`Real Calendar API: updated event for “${task.title}”`,'sync');
+}
+async function gcalDeleteOrMarkDone(task){
+  if(!task.gcalEventId) return;
+  await gcalPatchEvent(task, { summary: '✓ ' + task.title });
+}
+async function gcalListEvents(monthISO){
+  const [y,m] = monthISO.split('-').map(Number);
+  const timeMin = new Date(y, m-1, 1).toISOString();
+  const timeMax = new Date(y, m, 1).toISOString();
+  const data = await gcalRequest('GET', `/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true`);
+  return (data.items||[]).map(e => ({
+    id:e.id, title:e.summary||'(untitled event)',
+    date:(e.start && (e.start.date || (e.start.dateTime||'').slice(0,10)))||null,
+    source:'google'
+  })).filter(e=>e.date);
+}
+
+/* ---------- Drive appDataFolder (cross-device state sync) ---------- */
+async function driveRequest(method, url, opts={}){
+  const token = await ensureToken(true);
+  const headers = Object.assign({'Authorization':`Bearer ${token}`}, opts.headers||{});
+  const res = await fetch(url, {method, headers, body:opts.body});
+  if(!res.ok) throw new Error(`Drive API ${method} → ${res.status}`);
+  return opts.raw ? res : res.json();
+}
+async function driveFindFile(){
+  const data = await driveRequest('GET', `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name%3D%27${DRIVE_FILE_NAME}%27&fields=files(id,modifiedTime)`);
+  return (data.files && data.files[0]) || null;
+}
+async function driveSaveState(){
+  const existing = await driveFindFile();
+  const metadata = existing ? {} : {name: DRIVE_FILE_NAME, parents:['appDataFolder']};
+  const boundary = 'asana_demo_boundary';
+  const body =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(S)}\r\n--${boundary}--`;
+  const url = existing
+    ? `https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=multipart`
+    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+  await driveRequest(existing?'PATCH':'POST', url, { headers:{'Content-Type':`multipart/related; boundary=${boundary}`}, body });
+  S.google.lastSynced = Date.now();
+  log('Synced app state to Google Drive (appDataFolder)','sync');
+}
+function scheduleDriveSave(){
+  clearTimeout(driveSaveTimer);
+  driveSaveTimer = setTimeout(() => { driveSaveState().then(render).catch(e=>console.error(e)); }, 1500);
+}
+async function driveMergeOnLoad(){
+  const file = await driveFindFile();
+  if(!file) { await driveSaveState(); return; } // first run — seed Drive with local state
+  const remoteMod = new Date(file.modifiedTime).getTime();
+  if(remoteMod > (S.updatedAt||0)){
+    const token = await ensureToken(true);
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, { headers:{'Authorization':`Bearer ${token}`} });
+    const remote = await res.json();
+    remote.google = S.google; // keep local client id / connection flag authoritative
+    S = remote;
+    store.save(S);
+    toast('Loaded newer state from Google Drive (another device)');
+  } else {
+    await driveSaveState();
+  }
+}
+
+/* ---------- Rendering ---------- */
+function bindStatic(){
+  document.querySelectorAll('.view-tabs button').forEach(b => {
+    b.addEventListener('click', () => { S.view = b.dataset.view; save(); render(); });
+  });
+  const wf = document.getElementById('weeklyFocus');
+  wf.addEventListener('change', () => { S.weeklyFocus = wf.value; save(); toast('Weekly focus updated'); });
+  document.getElementById('sortSelect').addEventListener('change', e => { S.sort = e.target.value; save(); render(); });
+
+  const qi = document.getElementById('quickAddInput');
+  const doAdd = () => { if(qi.value.trim()){ quickAdd(qi.value.trim()); qi.value=''; } };
+  document.getElementById('quickAddBtn').addEventListener('click', doAdd);
+  qi.addEventListener('keydown', e => { if(e.key==='Enter') doAdd(); });
+
+  document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+  document.getElementById('drawerScrim').addEventListener('click', closeDrawer);
+  document.getElementById('dSave').addEventListener('click', saveDrawer);
+  document.getElementById('subNewBtn').addEventListener('click', addSubtask);
+  document.getElementById('subNewInput').addEventListener('keydown', e => { if(e.key==='Enter') addSubtask(); });
+  document.getElementById('dDelete').addEventListener('click', () => {
+    S.tasks = S.tasks.filter(t => t.id!==editingId);
+    S.externalEvents = S.externalEvents.filter(e => e.taskId!==editingId);
+    closeDrawer(); save(); render(); toast('Task deleted');
+  });
+
+  document.getElementById('btnExportJson').addEventListener('click', () => {
+    download('mytasks-state.json', JSON.stringify(S,null,2), 'application/json');
+    toast('State exported as JSON');
+  });
+  document.getElementById('btnImportJson').addEventListener('click', () => document.getElementById('importFile').click());
+  document.getElementById('importFile').addEventListener('change', e => {
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = () => { try{ S = JSON.parse(r.result); save(); render(); toast('State imported'); }catch(err){ toast('Import failed: invalid JSON'); } };
+    r.readAsText(f);
+  });
+}
+
+/* Quick-add parser: "!high/!med/!low" sets priority; "jul 10"/"tomorrow"/"today" sets due */
+function quickAdd(text){
+  let priority = null, due = null;
+  text = text.replace(/!(high|med(ium)?|low)\b/i, (m,p) => { priority = p.toLowerCase().startsWith('med')?'medium':p.toLowerCase(); return ''; });
+  text = text.replace(/\b(today|tomorrow)\b/i, m => { due = m.toLowerCase()==='today'?todayISO():addDays(todayISO(),1); return ''; });
+  const mo = text.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2})\b/i);
+  if(mo){
+    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    const y = new Date().getFullYear();
+    const d = new Date(y, months.indexOf(mo[1].slice(0,3).toLowerCase()), +mo[2]);
+    if(d < new Date(todayISO())) d.setFullYear(y+1);
+    due = iso(d); text = text.replace(mo[0],'');
+  }
+  const t = {id:uid(), title:text.trim()||'Untitled task', project:'', priority, start:null, due,
+             section: due===todayISO() ? 'today' : (due ? 'upcoming' : 'recent'), done:false, notes:''};
+  S.tasks.unshift(t);
+  if(priority==='high') fireRules(t,'priority');
+  save(); render(); toast('Task added'+(due?` · due ${fmtDue(due)}`:''));
+}
+
+function render(){
+  document.getElementById('weeklyFocus').value = S.weeklyFocus||'';
+  document.getElementById('sortSelect').value = S.sort;
+  document.getElementById('syncBadge').textContent = S.externalEvents.length;
+  document.querySelectorAll('.view-tabs button').forEach(b => b.classList.toggle('active', b.dataset.view===S.view));
+  document.getElementById('sortWrap').style.visibility = (S.view==='list') ? 'visible':'hidden';
+  const m = document.getElementById('main');
+  if(S.view==='list') m.innerHTML = renderList();
+  else if(S.view==='board') m.innerHTML = renderBoard();
+  else if(S.view==='calendar'){ m.innerHTML = renderCalendar(); maybePullRealEvents(); }
+  else m.innerHTML = renderSync();
+  wireDynamic();
+}
+
+/* Pull real Google Calendar events for the visible month, once, then
+   re-render with them merged into S.externalEvents so the same chip
+   rendering code in renderCalendar() works for both modes. */
+let pulledMonth = null;
+function maybePullRealEvents(){
+  if(!(S.google.connected && S.google.clientId)) return;
+  if(pulledMonth===S.calMonth) return;
+  pulledMonth = S.calMonth;
+  gcalListEvents(S.calMonth).then(events => {
+    S.externalEvents = events; // real events replace the simulated list while connected
+    render();
+  }).catch(e => console.error(e));
+}
+
+function subPill(t){
+  const st = t.subtasks||[];
+  if(!st.length) return '';
+  const done = st.filter(s=>s.done).length;
+  return `<span class="pill progress ${done===st.length?'complete':''}" title="Subtasks completed">${done}/${st.length}</span>`;
+}
+function taskRow(t){
+  const dueCls = !t.due ? '' : (t.due < todayISO() && !t.done ? 'overdue' : (t.due===todayISO() ? 'today':''));
+  const synced = t.due && !t.done;
+  return `<div class="task-row ${t.done?'done':''}" data-id="${t.id}" role="button" tabindex="0">
+    <button class="checkbox ${t.done?'checked':''}" data-check="${t.id}" aria-label="Complete task">
+      <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.5 4.8 9 10 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <span class="t-title">${esc(t.title)}</span>
+    ${t.project?`<span class="pill project">${esc(t.project)}</span>`:''}
+    ${subPill(t)}
+    ${t.priority?`<span class="pill p-${t.priority}">${PRI_LABEL[t.priority]}</span>`:''}
+    ${synced?`<span class="pill synced" title="Has a due date → appears in calendar views and the ICS feed">⇄ feed</span>`:''}
+    <span class="t-due ${dueCls}">${fmtDue(t.due)}</span>
+  </div>`;
+}
+
+function sortedTasks(){
+  const ts = [...S.tasks];
+  if(S.sort==='priority') ts.sort((a,b) => (PRI_ORDER[a.priority]-PRI_ORDER[b.priority]) || ((a.due||'9999')<(b.due||'9999')?-1:1));
+  else if(S.sort==='due') ts.sort((a,b) => (a.due||'9999') < (b.due||'9999') ? -1 : 1);
+  return ts;
+}
+
+function renderList(){
+  if(S.sort!=='none'){
+    const label = S.sort==='priority' ? 'Priority → due date' : 'Due date';
+    return `<div class="section-block"><div class="section-head">Sorted by ${label}</div>
+      ${sortedTasks().map(taskRow).join('') || '<div class="empty-note">No tasks yet.</div>'}</div>`;
+  }
+  const sections = [['today','Today'],['upcoming','Upcoming'],['later','Later'],['recent','Recently assigned']];
+  return sections.map(([key,label]) => {
+    const ts = S.tasks.filter(t => t.section===key);
+    return `<div class="section-block">
+      <div class="section-head">${label} <span class="count">${ts.length}</span></div>
+      ${ts.map(taskRow).join('') || '<div class="empty-note">Nothing here — drag a card in Board view or add a task.</div>'}
+    </div>`;
+  }).join('');
+}
+
+function boardCard(t){
+  return `<div class="board-card ${t.done?'done':''}" draggable="true" data-id="${t.id}">
+    <div class="bc-title">${esc(t.title)}</div>
+    <div class="bc-meta">
+      ${t.priority?`<span class="pill p-${t.priority}">${PRI_LABEL[t.priority]}</span>`:''}
+      ${subPill(t)}
+      ${t.project?`<span class="pill project">${esc(t.project)}</span>`:''}
+      ${t.due?`<span class="t-due ${t.due<todayISO()&&!t.done?'overdue':''}">${fmtDue(t.due)}</span>`:''}
+    </div>
+  </div>`;
+}
+
+function renderBoard(){
+  const cols = [['today','Today'],['upcoming','Upcoming'],['later','Later'],['recent','Recently assigned']];
+  return `<div class="board">${cols.map(([key,label]) => `
+    <div class="board-col" data-section="${key}">
+      <h3>${label} <span class="count" style="font-size:.7rem;color:var(--ink-faint)">${S.tasks.filter(t=>t.section===key).length}</span></h3>
+      ${S.tasks.filter(t=>t.section===key).map(boardCard).join('')}
+    </div>`).join('')}</div>`;
+}
+
+function renderCalendar(){
+  const [y,m] = S.calMonth.split('-').map(Number);
+  const first = new Date(y, m-1, 1);
+  const startDow = (first.getDay()+6)%7; // Monday first
+  const daysIn = new Date(y, m, 0).getDate();
+  const prevDays = new Date(y, m-1, 0).getDate();
+  const cells = [];
+  for(let i=startDow-1;i>=0;i--) cells.push({d:prevDays-i, other:true, iso:iso(new Date(y,m-2,prevDays-i))});
+  for(let d=1;d<=daysIn;d++) cells.push({d, other:false, iso:iso(new Date(y,m-1,d))});
+  while(cells.length%7) cells.push({d:cells.length, other:true, iso:iso(new Date(y,m,cells.length-daysIn-startDow+1))});
+
+  const unsched = S.tasks.filter(t => !t.due && !t.done);
+  const monthName = first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const T = todayISO();
+
+  return `<div class="cal-layout">
+    <div class="unsched" id="unschedZone">
+      <h3>Unscheduled tasks</h3>
+      <p class="hint">Drag a task onto a date to set its due date — the calendar, list, board and ICS feed all update from that single field. Drop a scheduled chip back here to unschedule it.</p>
+      ${unsched.map(boardCard).join('') || '<div class="empty-note">Everything has a date. 🎉</div>'}
+    </div>
+    <div class="cal-panel">
+      <div class="cal-head">
+        <button class="cal-nav" data-nav="-1" aria-label="Previous month">‹</button>
+        <h3>${monthName}</h3>
+        <button class="cal-nav" data-nav="1" aria-label="Next month">›</button>
+      </div>
+      <div class="cal-legend">
+        <span class="key"><span class="swatch" style="background:var(--hi)"></span>High</span>
+        <span class="key"><span class="swatch" style="background:var(--md)"></span>Medium</span>
+        <span class="key"><span class="swatch" style="background:var(--lo)"></span>Low</span>
+        <span class="key"><span class="swatch" style="border:1.4px dashed var(--gcal);background:#fff"></span>Google Calendar event (from rules)</span>
+      </div>
+      <div class="cal-grid">
+        ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+        ${cells.map(c => {
+          const dayTasks = S.tasks.filter(t => t.due===c.iso);
+          const dayEvents = S.externalEvents.filter(e => e.date===c.iso);
+          return `<div class="cal-cell ${c.other?'other':''} ${c.iso===T?'today-cell':''}" data-date="${c.iso}">
+            <span class="daynum">${c.d}</span>
+            ${dayTasks.map(t=>`<button class="cal-chip p-${t.priority||'none'} ${t.done?'done':''}" draggable="true" data-id="${t.id}" title="${esc(t.title)}">${esc(t.title)}</button>`).join('')}
+            ${dayEvents.map(e=>`<span class="cal-chip gcal-event" title="Lives on the external Google Calendar — created by a rule">${esc(e.title)}</span>`).join('')}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSync(){
+  const ics = buildICS();
+  const icsHtml = esc(ics).split('\r\n').map(l =>
+    l.startsWith('SUMMARY')||l.startsWith('DTSTART') ? `<span class="hl">${l}</span>` : l).join('\n');
+  const feedTasks = S.tasks.filter(t=>t.due&&!t.done).length;
+  const g = S.google;
+  return `<div class="sync-grid">
+
+    <div class="sync-card cloud-card">
+      <h3>Cloud account <span class="dir-tag rules">${g.connected?'connected':'not connected'}</span></h3>
+      <p class="desc">Real Google OAuth (Google Identity Services) running entirely client-side — no backend, so this works unchanged when deployed as a static GitHub Pages site. One login covers two things: writing real events to your Google Calendar, and syncing this app's full state (tasks, notes, lists) to a hidden file in your Google Drive so your phone and laptop see the same data.</p>
+      <ol class="setup-steps">
+        <li>Google Cloud Console → new project → enable <code>Calendar API</code> + <code>Drive API</code></li>
+        <li>OAuth consent screen → External → Testing → add yourself as a test user</li>
+        <li>Credentials → Create OAuth Client ID → type <b>Web application</b> → add your GitHub Pages URL as an authorized JavaScript origin</li>
+        <li>Paste the Client ID below (safe to store — it's a public identifier, not a secret)</li>
+      </ol>
+      <div class="field" style="margin-bottom:12px"><label>Google OAuth Client ID</label>
+        <input id="gClientId" type="text" placeholder="xxxxxxxx.apps.googleusercontent.com" value="${esc(g.clientId)}">
+      </div>
+      <div class="status-row">
+        <span class="status-dot ${g.connected?'on':''}"></span>
+        <span style="font-size:.82rem;color:var(--ink-soft)">${g.connected ? 'Connected — Calendar writes and Drive sync are live.' : 'Not connected — rules run in local simulation mode.'}</span>
+      </div>
+      <div class="btn-row">
+        ${g.connected
+          ? `<button class="btn ghost" id="btnGoogleDisconnect">Disconnect</button><button class="btn blue" id="btnSyncNow">Sync now</button>`
+          : `<button class="btn blue" id="btnGoogleConnect">Connect Google account</button>`}
+      </div>
+      <p class="desc" style="margin-top:10px;margin-bottom:0;font-size:.74rem">
+        ${g.lastSynced ? `Last synced to Drive: ${new Date(g.lastSynced).toLocaleString()}` : 'Not yet synced to Drive.'}
+        Scopes requested: <code style="font-family:'JetBrains Mono';font-size:.68rem">calendar.events</code>, <code style="font-family:'JetBrains Mono';font-size:.68rem">drive.appdata</code> (appdata is invisible to you in normal Drive — it's app-private storage).
+      </p>
+    </div>
+
+    <div class="sync-card">
+      <h3>Sync to Calendar <span class="dir-tag oneway">one-way feed</span></h3>
+      <div class="pipeline">
+        <div class="pipe-node asana">My Tasks<small>${feedTasks} tasks with due dates</small></div>
+        <div class="pipe-flow animate"></div>
+        <div class="pipe-node gcal">Google Calendar<small>all-day events</small></div>
+      </div>
+      <p class="desc">Asana exposes My Tasks as a subscribable calendar feed. Every incomplete task with a due date becomes an <b>all-day event</b> on that date. Updates flow Asana → calendar only; edits made in Google Calendar never travel back.</p>
+      <div class="feed-url">webcal://app.asana-demo.local/calendars/my-tasks/${'x'.repeat(0)}feed.ics <em style="color:var(--ink-faint)">(simulated subscribe URL — use the download instead)</em></div>
+      <div class="ics-preview">${icsHtml}</div>
+      <div class="btn-row">
+        <button class="btn primary" id="btnIcs">Download .ics feed</button>
+        <button class="btn ghost" id="btnCopyIcs">Copy ICS text</button>
+      </div>
+      <p class="desc" style="margin-top:12px;margin-bottom:0">Import the file into real Google Calendar via <b>Settings → Import &amp; export → Import</b>, or into Apple/Outlook by opening it. Priorities travel inside the event title, e.g. <code style="font-family:'JetBrains Mono';font-size:.72rem">[High]</code>.</p>
+    </div>
+
+    <div class="sync-card">
+      <h3>Google Calendar with Rules <span class="dir-tag rules">two-way, event-linked</span></h3>
+      <p class="desc">The deeper integration is rule-driven: task-side triggers create real calendar events, and a data-sync setting keeps linked events updated when the task changes. Toggle the rules, then change a task's priority to High or complete a task to watch them fire.</p>
+
+      <div class="rule-item">
+        <label class="switch"><input type="checkbox" id="ruleHigh" ${S.rules.highToEvent?'checked':''}><span class="track"></span></label>
+        <div class="rule-text"><b>Trigger:</b> priority custom field changes to <code>High</code><br><b>Action:</b> create a placeholder event on Google Calendar (due date, or tomorrow if unscheduled)</div>
+      </div>
+      <div class="rule-item">
+        <label class="switch"><input type="checkbox" id="ruleDone" ${S.rules.completeMarks?'checked':''}><span class="track"></span></label>
+        <div class="rule-text"><b>Trigger:</b> task marked <code>complete</code><br><b>Action:</b> annotate the linked calendar event as done (data-sync setting)</div>
+      </div>
+
+      <h3 style="margin-top:16px;font-size:.85rem">Automation log</h3>
+      <div class="log-list">
+        ${S.syncLog.map(l=>`<div class="log-entry ${l.kind}"><time>${esc(l.t)}</time>${esc(l.msg)}</div>`).join('') || '<div class="empty-note">No automations have fired yet. Set a task to High priority to try it.</div>'}
+      </div>
+    </div>
+
+    <div class="arch-note">
+      <h3>How the three layers connect</h3>
+      Everything is anchored on a single <b class="k">Due Date field</b> per task. The <b>list, board and calendar are just view toggles</b> over the same task objects — dragging a card onto a calendar date writes that one field, and every other surface re-renders from it. <b>Priority is a custom field</b>, not a separate system: sorting (<i>Priority → due date</i>) reads it, calendar chips are colored by it, the ICS feed embeds it in event titles, and the rules engine uses it as a trigger. The external layer splits in two: a <b>read-only ICS feed</b> (deadlines as all-day events, Asana → calendar only) and a <b>rules integration</b> (task triggers create/update real events, with field-level data sync back to the event) — implemented above with a real, client-side OAuth token calling the Calendar API directly, no server involved. <b>Checklists live inside tasks as subtasks</b> — Microsoft To Do-style steps with instant saving and a progress count that surfaces on list rows and board cards, so breakdown work stays attached to the deadline that drives it instead of living in a separate silo. <b>Cross-device sync</b> reuses the identical Google login to write the whole app state as one JSON file into your Drive's app-private storage, so a phone and a laptop converge on whichever copy was saved most recently. For automated hourly time-blocking of High-priority work, Asana itself stops here — that's the layer tools like Reclaim.ai, Motion or Clockwise add on top by reading these same fields.
+    </div>
+  </div>`;
+}
+
+/* ---------- Dynamic wiring per render ---------- */
+function wireDynamic(){
+  // open drawer / complete
+  document.querySelectorAll('.task-row').forEach(r => {
+    r.addEventListener('click', e => { if(!e.target.closest('[data-check]')) openDrawer(r.dataset.id); });
+    r.addEventListener('keydown', e => { if(e.key==='Enter') openDrawer(r.dataset.id); });
+  });
+  document.querySelectorAll('[data-check]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const t = S.tasks.find(x=>x.id===b.dataset.check);
+    t.done = !t.done;
+    if(t.done) fireRules(t,'completed');
+    save(); render();
+  }));
+
+  // board drag & drop
+  document.querySelectorAll('.board-card').forEach(c => {
+    c.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', c.dataset.id));
+    c.addEventListener('click', () => openDrawer(c.dataset.id));
+  });
+  document.querySelectorAll('.board-col').forEach(col => {
+    col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('dragover'); });
+    col.addEventListener('dragleave', () => col.classList.remove('dragover'));
+    col.addEventListener('drop', e => {
+      e.preventDefault(); col.classList.remove('dragover');
+      const t = S.tasks.find(x=>x.id===e.dataTransfer.getData('text/plain'));
+      if(t){ t.section = col.dataset.section; save(); render(); }
+    });
+  });
+
+  // calendar nav + drag & drop scheduling
+  document.querySelectorAll('.cal-nav').forEach(b => b.addEventListener('click', () => {
+    const [y,m] = S.calMonth.split('-').map(Number);
+    const d = new Date(y, m-1+Number(b.dataset.nav), 1);
+    S.calMonth = `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+    save(); render();
+  }));
+  document.querySelectorAll('.cal-chip[data-id]').forEach(c => {
+    c.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', c.dataset.id));
+    c.addEventListener('click', () => openDrawer(c.dataset.id));
+  });
+  document.querySelectorAll('.cal-cell').forEach(cell => {
+    cell.addEventListener('dragover', e => { e.preventDefault(); cell.classList.add('dragover'); });
+    cell.addEventListener('dragleave', () => cell.classList.remove('dragover'));
+    cell.addEventListener('drop', e => {
+      e.preventDefault(); cell.classList.remove('dragover');
+      const t = S.tasks.find(x=>x.id===e.dataTransfer.getData('text/plain'));
+      if(t){
+        t.due = cell.dataset.date;
+        if(t.section==='recent'||t.section==='later') t.section = t.due===todayISO()?'today':'upcoming';
+        fireRules(t,'due');
+        save(); render(); toast(`Due date set → ${fmtDue(t.due)} (feed & views updated)`);
+      }
+    });
+  });
+  const uz = document.getElementById('unschedZone');
+  if(uz){
+    uz.addEventListener('dragover', e => e.preventDefault());
+    uz.addEventListener('drop', e => {
+      e.preventDefault();
+      const t = S.tasks.find(x=>x.id===e.dataTransfer.getData('text/plain'));
+      if(t){ t.due = null; save(); render(); toast('Task unscheduled'); }
+    });
+  }
+
+  // sync view controls
+  const bi = document.getElementById('btnIcs');
+  if(bi) bi.addEventListener('click', () => { download('my-tasks.ics', buildICS(), 'text/calendar'); toast('.ics downloaded — import it into Google Calendar'); });
+  const bc = document.getElementById('btnCopyIcs');
+  if(bc) bc.addEventListener('click', async () => {
+    try{ await navigator.clipboard.writeText(buildICS()); toast('ICS copied to clipboard'); }
+    catch(e){ toast('Clipboard blocked — use Download instead'); }
+  });
+  const rh = document.getElementById('ruleHigh');
+  if(rh) rh.addEventListener('change', () => { S.rules.highToEvent = rh.checked; log(`Rule “High → calendar event” turned ${rh.checked?'ON':'OFF'}`,'rule'); save(); render(); });
+  const rd = document.getElementById('ruleDone');
+  if(rd) rd.addEventListener('change', () => { S.rules.completeMarks = rd.checked; log(`Rule “complete → annotate event” turned ${rd.checked?'ON':'OFF'}`,'rule'); save(); render(); });
+
+  // cloud / google controls
+  const ci = document.getElementById('gClientId');
+  if(ci) ci.addEventListener('change', () => { S.google.clientId = ci.value.trim(); save(); toast('Client ID saved'); updateGooglePill(); });
+  const gc = document.getElementById('btnGoogleConnect');
+  if(gc) gc.addEventListener('click', connectGoogle);
+  const gd = document.getElementById('btnGoogleDisconnect');
+  if(gd) gd.addEventListener('click', disconnectGoogle);
+  const gs = document.getElementById('btnSyncNow');
+  if(gs) gs.addEventListener('click', () => { driveSaveState().then(()=>{render(); toast('Synced to Google Drive');}).catch(e=>{console.error(e); toast('Sync failed — see console');}); });
+
+}
+
+/* ---------- Drawer ---------- */
+function openDrawer(id){
+  const t = S.tasks.find(x=>x.id===id); if(!t) return;
+  editingId = id;
+  document.getElementById('dTitle').value = t.title;
+  document.getElementById('dProject').value = t.project||'';
+  document.getElementById('dPriority').value = t.priority||'';
+  document.getElementById('dStart').value = t.start||'';
+  document.getElementById('dDue').value = t.due||'';
+  document.getElementById('dSection').value = t.section;
+  document.getElementById('dNotes').value = t.notes||'';
+  renderSubtasks(t);
+  document.body.classList.add('drawer-open');
+}
+
+/* Subtasks save instantly (like Asana / Microsoft To Do steps) — no need
+   to press "Save changes", which only commits the main task fields. */
+function renderSubtasks(t){
+  const st = t.subtasks || (t.subtasks = []);
+  const done = st.filter(s=>s.done).length;
+  document.getElementById('subCount').textContent = st.length ? `· ${done}/${st.length}` : '';
+  document.getElementById('subFill').style.width = st.length ? `${Math.round(done/st.length*100)}%` : '0%';
+  const list = document.getElementById('subList');
+  list.innerHTML = st.map(s => `
+    <div class="sub-item ${s.done?'done':''}" data-sid="${s.id}">
+      <button class="checkbox ${s.done?'checked':''}" data-stoggle="${s.id}" aria-label="Toggle subtask">
+        <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.5 4.8 9 10 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <input class="sub-text" data-sedit="${s.id}" value="${esc(s.text)}">
+      <button class="sub-del" data-sdel="${s.id}" aria-label="Delete subtask">✕</button>
+    </div>`).join('');
+
+  list.querySelectorAll('[data-stoggle]').forEach(b => b.addEventListener('click', () => {
+    const s = st.find(x=>x.id===b.dataset.stoggle); s.done = !s.done;
+    save(); renderSubtasks(t); refreshBackground();
+  }));
+  list.querySelectorAll('[data-sedit]').forEach(i => i.addEventListener('change', () => {
+    const s = st.find(x=>x.id===i.dataset.sedit); s.text = i.value.trim()||s.text;
+    save();
+  }));
+  list.querySelectorAll('[data-sdel]').forEach(b => b.addEventListener('click', () => {
+    t.subtasks = st.filter(x=>x.id!==b.dataset.sdel);
+    save(); renderSubtasks(t); refreshBackground();
+  }));
+}
+function addSubtask(){
+  const t = S.tasks.find(x=>x.id===editingId); if(!t) return;
+  const inp = document.getElementById('subNewInput');
+  const text = inp.value.trim(); if(!text) return;
+  (t.subtasks || (t.subtasks=[])).push({id:uid(), text, done:false});
+  inp.value=''; inp.focus();
+  save(); renderSubtasks(t); refreshBackground();
+}
+/* Re-render the main view behind the drawer (progress pills) without
+   touching the drawer itself. */
+function refreshBackground(){
+  const m = document.getElementById('main');
+  if(S.view==='list') m.innerHTML = renderList();
+  else if(S.view==='board') m.innerHTML = renderBoard();
+  else if(S.view==='calendar') m.innerHTML = renderCalendar();
+  else m.innerHTML = renderSync();
+  wireDynamic();
+}
+function closeDrawer(){ document.body.classList.remove('drawer-open'); editingId = null; }
+function saveDrawer(){
+  const t = S.tasks.find(x=>x.id===editingId); if(!t) return;
+  const oldPri = t.priority, oldDue = t.due;
+  t.title = document.getElementById('dTitle').value.trim()||'Untitled task';
+  t.project = document.getElementById('dProject').value.trim();
+  t.priority = document.getElementById('dPriority').value||null;
+  t.start = document.getElementById('dStart').value||null;
+  t.due = document.getElementById('dDue').value||null;
+  t.section = document.getElementById('dSection').value;
+  t.notes = document.getElementById('dNotes').value;
+  if(t.priority!==oldPri && t.priority==='high') fireRules(t,'priority');
+  if(t.due!==oldDue) fireRules(t,'due');
+  closeDrawer(); save(); render(); toast('Task updated');
+}
+
+/* ---------- Utilities ---------- */
+function download(name, content, mime){
+  const blob = new Blob([content], {type:mime});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+}
+let toastTimer = null;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2600);
+}
+
+init();
+
+// Register the service worker (installable, offline-capable app shell).
+// Safe no-op if served somewhere that doesn't support it (e.g. file://).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>

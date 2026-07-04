@@ -1,0 +1,14 @@
+{
+  "name": "My Tasks",
+  "short_name": "My Tasks",
+  "description": "Personal task manager with lists, board, calendar, subtasks and Google Calendar sync.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#1d2733",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
