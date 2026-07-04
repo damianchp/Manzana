@@ -339,6 +339,109 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
 .sub-progress-bar{height:4px;background:#eef1f5;border-radius:99px;overflow:hidden;margin:6px 0 2px}
 .sub-progress-bar .fill{height:100%;background:var(--sync);border-radius:99px;transition:width .25s}
 
+/* ---------- Book tab (Calendly-style scheduling) ---------- */
+.book-subtabs{display:flex;background:#eceff3;border-radius:99px;padding:3px;margin-bottom:16px;width:fit-content}
+.book-subtabs button{padding:7px 16px;border-radius:99px;font-size:.82rem;font-weight:600;color:var(--ink-soft)}
+.book-subtabs button.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.evt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:18px}
+.evt-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;position:relative}
+.evt-card.inactive{opacity:.5}
+.evt-card .evt-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:7px}
+.evt-card h4{font-family:'Sora';font-size:.95rem;font-weight:700;margin-bottom:4px;display:flex;align-items:center}
+.evt-card .evt-meta{font-size:.76rem;color:var(--ink-faint);margin-bottom:10px}
+.evt-card .evt-desc{font-size:.8rem;color:var(--ink-soft);margin-bottom:12px;min-height:0}
+.evt-card .evt-actions{display:flex;gap:6px;flex-wrap:wrap}
+.evt-link-row{
+  font-family:'JetBrains Mono',monospace;font-size:.66rem;background:var(--paper);border:1px dashed var(--line);
+  border-radius:7px;padding:6px 8px;margin-bottom:10px;overflow-wrap:anywhere;color:var(--ink-soft);
+}
+.evt-new-card{
+  border:1.5px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;
+  min-height:140px;color:var(--ink-faint);font-weight:600;font-size:.85rem;cursor:pointer;
+}
+.evt-new-card:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.evt-form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px}
+.evt-form .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.evt-form .grid2{grid-template-columns:1fr}}
+
+.avail-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.avail-day-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.avail-day-row:last-child{border-bottom:none}
+.avail-day-row .dayname{width:100px;font-size:.85rem;font-weight:600}
+.avail-day-row input[type=time]{border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:.82rem}
+.avail-day-row .to{color:var(--ink-faint);font-size:.8rem}
+.avail-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.avail-row label{font-size:.82rem;font-weight:600;color:var(--ink-soft);min-width:150px}
+.avail-row input[type=number],.avail-row select{border:1px solid var(--line);border-radius:7px;padding:6px 9px;font-size:.85rem}
+.override-tag{
+  display:inline-flex;align-items:center;gap:6px;font-size:.76rem;background:var(--hi-bg);color:var(--hi);
+  padding:4px 9px;border-radius:99px;margin:3px 6px 3px 0;
+}
+.override-tag button{font-weight:700}
+
+.mtg-row{
+  display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:10px;padding:12px 14px;margin-bottom:8px;
+}
+.mtg-date{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--paper);border-radius:9px;padding:6px 12px;min-width:54px;
+}
+.mtg-date .dow{font-size:.62rem;font-weight:700;color:var(--ink-faint);text-transform:uppercase}
+.mtg-date .dnum{font-family:'Sora';font-weight:700;font-size:1.05rem}
+.mtg-info{flex:1;min-width:0}
+.mtg-info .mtg-title{font-size:.9rem;font-weight:600}
+.mtg-info .mtg-sub{font-size:.78rem;color:var(--ink-faint)}
+.mtg-row.cancelled{opacity:.5}
+.mtg-row.cancelled .mtg-title{text-decoration:line-through}
+
+/* ---------- Public booking page (standalone, no app chrome) ---------- */
+#publicBookingRoot{min-height:100vh;background:var(--paper);display:flex;justify-content:center;padding:32px 16px}
+.pub-card{
+  background:var(--card);border-radius:18px;box-shadow:var(--shadow);max-width:760px;width:100%;
+  padding:0;overflow:hidden;height:fit-content;
+}
+.pub-head{padding:22px 26px;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:flex-start}
+.pub-head .evt-dot{width:12px;height:12px;border-radius:50%;margin-top:5px}
+.pub-head h2{font-family:'Sora';font-size:1.15rem;font-weight:700}
+.pub-head p{font-size:.84rem;color:var(--ink-soft);margin-top:4px;line-height:1.5}
+.pub-head .pub-meta{font-size:.78rem;color:var(--ink-faint);margin-top:6px;display:flex;gap:12px;flex-wrap:wrap}
+.pub-body{padding:22px 26px}
+.pub-dates{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px}
+.pub-date-btn{
+  min-width:58px;text-align:center;padding:9px 4px;border-radius:10px;border:1px solid var(--line);
+  font-size:.76rem;font-weight:600;color:var(--ink-soft);flex-shrink:0;
+}
+.pub-date-btn .d{font-size:.64rem;color:var(--ink-faint);text-transform:uppercase;display:block;margin-bottom:2px}
+.pub-date-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pub-date-btn.active .d{color:#fde4e1}
+.pub-date-btn:disabled{opacity:.3;cursor:not-allowed}
+.pub-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.pub-slot-btn{
+  padding:9px 4px;border-radius:9px;border:1px solid var(--line);font-size:.82rem;font-weight:600;
+  color:var(--ink-soft);background:var(--card);
+}
+.pub-slot-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pub-slot-btn.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pub-form .field{margin-bottom:12px}
+.pub-confirm{text-align:center;padding:20px 10px}
+.pub-confirm .check-big{
+  width:52px;height:52px;border-radius:50%;background:var(--sync-bg);color:var(--sync);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.6rem;
+}
+.pub-confirm h2{font-family:'Sora';margin-bottom:8px}
+.pub-confirm p{color:var(--ink-soft);font-size:.88rem;margin-bottom:16px}
+.pub-footer-link{padding:14px 26px;border-top:1px solid var(--line);font-size:.74rem;color:var(--ink-faint);text-align:center}
+
+/* ---------- Calendar personal/professional overlay ---------- */
+.cal-show-toggle{display:flex;gap:6px;margin-left:auto}
+.cal-show-toggle button{
+  font-size:.72rem;font-weight:600;padding:5px 11px;border-radius:99px;border:1px solid var(--line);color:var(--ink-soft);
+}
+.cal-show-toggle button.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.cal-chip.booking{background:#f0e9fb;color:#7c4fd1;border:1px solid transparent}
+.cal-chip.booking::before{content:"◐ ";}
+
 /* ---------- Cloud sync card ---------- */
 .cloud-card .status-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .status-dot{width:9px;height:9px;border-radius:50%;background:#cfd6df}
@@ -360,6 +463,7 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
 </head>
 <body>
 
+<div id="appRoot">
 <header class="topbar">
   <div class="logo"><span class="dot"></span>My Tasks <span class="sub">· Asana architecture demo</span></div>
   <div class="topbar-right">
@@ -380,6 +484,7 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
     <button data-view="list" class="active" role="tab">List</button>
     <button data-view="board" role="tab">Board</button>
     <button data-view="calendar" role="tab">Calendar</button>
+    <button data-view="book" role="tab">Book</button>
     <button data-view="sync" role="tab">Sync<span class="badge" id="syncBadge">0</span></button>
   </div>
   <div class="spacer"></div>
@@ -444,6 +549,10 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
 </aside>
 
 <div id="toast" role="status"></div>
+</div><!-- /appRoot -->
+
+<div id="publicBookingRoot" style="display:none"></div>
+
 <script>
 /* =====================================================================
    ASANA ARCHITECTURE DEMO — data model, views, sorting, calendar,
@@ -493,6 +602,7 @@ const PRI_LABEL = {high:'High', medium:'Medium', low:'Low'};
 /* ---------- Seed data (embedded JSON) ---------- */
 function seedState(){
   const T = todayISO();
+  const introId = uid(), consultId = uid();
   return {
     weeklyFocus: 'Land one industry interview — everything else supports this.',
     view: 'list',
@@ -510,6 +620,36 @@ function seedState(){
       lastSynced: null
     },
     updatedAt: Date.now(),
+    bookView: 'types',
+    calShow: 'both',
+    eventTypes: [
+      {id:introId, name:'Intro call', slug:'intro-call', duration:30, buffer:10, color:'#f25d52',
+       description:'A short call to see if we\'re a good fit to work together.', locationType:'video',
+       questionLabel:'Anything specific you\'d like to cover?', active:true},
+      {id:consultId, name:'Consulting session', slug:'consulting-session', duration:60, buffer:15, color:'#5a7dde',
+       description:'A focused working session — bring your data or your questions.', locationType:'video',
+       questionLabel:'What would you like help with?', active:true}
+    ],
+    availability: {
+      timezone: 'Europe/Copenhagen',
+      minNoticeHours: 12,
+      dailyLimit: null,
+      weekly: {
+        sun:{enabled:false, start:'09:00', end:'17:00'},
+        mon:{enabled:true,  start:'09:00', end:'17:00'},
+        tue:{enabled:true,  start:'09:00', end:'17:00'},
+        wed:{enabled:true,  start:'09:00', end:'17:00'},
+        thu:{enabled:true,  start:'09:00', end:'17:00'},
+        fri:{enabled:true,  start:'09:00', end:'15:00'},
+        sat:{enabled:false, start:'09:00', end:'17:00'}
+      },
+      overrides: {}   // 'YYYY-MM-DD': {blocked:true}
+    },
+    bookings: [
+      {id:uid(), eventTypeId:introId, date:addDays(T,5), start:'14:00', end:'14:30',
+       inviteeName:'Sample invitee', inviteeEmail:'invitee@example.com', note:'',
+       status:'confirmed', gcalEventId:null, createdAt:T}
+    ],
     tasks: [
       {id:uid(), title:'Follow up on pharma biostatistician application', project:'Job search', priority:'high',   start:null, due:T,            section:'today',    done:false, notes:'Check status; reference the team you interviewed with.',
        subtasks:[{id:uid(),text:'Re-read job posting for keywords',done:true},{id:uid(),text:'Draft 3-line follow-up email',done:false},{id:uid(),text:'Send before Friday 12:00',done:false}]},
@@ -539,6 +679,15 @@ async function init(){
   S = await store.load() || seedState();
   if(!S.calMonth) S.calMonth = todayISO().slice(0,7);
   if(!S.google) S.google = {clientId:'', connected:false, lastSynced:null};
+  if(!S.eventTypes) S.eventTypes = [];
+  if(!S.availability) S.availability = {timezone:'Europe/Copenhagen', minNoticeHours:12, dailyLimit:null,
+    weekly:{sun:{enabled:false,start:'09:00',end:'17:00'},mon:{enabled:true,start:'09:00',end:'17:00'},
+    tue:{enabled:true,start:'09:00',end:'17:00'},wed:{enabled:true,start:'09:00',end:'17:00'},
+    thu:{enabled:true,start:'09:00',end:'17:00'},fri:{enabled:true,start:'09:00',end:'17:00'},
+    sat:{enabled:false,start:'09:00',end:'17:00'}}, overrides:{}};
+  if(!S.bookings) S.bookings = [];
+  if(!S.bookView) S.bookView = 'types';
+  if(!S.calShow) S.calShow = 'both';
   S.tasks.forEach(t => { if(!Array.isArray(t.subtasks)) t.subtasks = []; });
   bindStatic();
   render();
@@ -546,6 +695,7 @@ async function init(){
     try{
       await ensureToken(true);           // silent — no popup
       await driveMergeOnLoad();          // pull newer remote state if present
+      await reconcileCalendar();         // catch up any High tasks missing an event
       updateGooglePill();
       render();
     }catch(e){
@@ -682,9 +832,10 @@ async function connectGoogle(){
     await ensureToken(false);       // user gesture → real consent popup on first run
     S.google.connected = true;
     save();
-    toast('Google connected');
     await driveMergeOnLoad();
+    const created = await reconcileCalendar();
     render();
+    toast(created ? `Google connected — created ${created} calendar event${created===1?'':'s'} for existing High-priority tasks` : 'Google connected');
   }catch(e){
     toast('Google connect failed — see console for details');
     console.error(e);
@@ -733,6 +884,21 @@ async function gcalDeleteOrMarkDone(task){
   if(!task.gcalEventId) return;
   await gcalPatchEvent(task, { summary: '✓ ' + task.title });
 }
+/* Catch-up pass: the rules above only fire on the *transition* into High
+   priority, so a task that was already High before you connected Google
+   (e.g. seed data, or created while offline) would otherwise never get an
+   event. Run this on connect and on every manual "Sync now". */
+async function reconcileCalendar(){
+  if(!(S.google.connected && S.google.clientId)) return 0;
+  if(!S.rules.highToEvent) return 0;
+  const missing = S.tasks.filter(t => t.priority==='high' && !t.done && !t.gcalEventId);
+  for(const t of missing){
+    try{ await gcalCreateEvent(t); }catch(e){ console.error('reconcile failed for', t.title, e); }
+  }
+  if(missing.length) save();
+  return missing.length;
+}
+
 async function gcalListEvents(monthISO){
   const [y,m] = monthISO.split('-').map(Number);
   const timeMin = new Date(y, m-1, 1).toISOString();
@@ -860,6 +1026,7 @@ function render(){
   if(S.view==='list') m.innerHTML = renderList();
   else if(S.view==='board') m.innerHTML = renderBoard();
   else if(S.view==='calendar'){ m.innerHTML = renderCalendar(); maybePullRealEvents(); }
+  else if(S.view==='book') m.innerHTML = renderBook();
   else m.innerHTML = renderSync();
   wireDynamic();
 }
@@ -970,22 +1137,32 @@ function renderCalendar(){
         <button class="cal-nav" data-nav="-1" aria-label="Previous month">‹</button>
         <h3>${monthName}</h3>
         <button class="cal-nav" data-nav="1" aria-label="Next month">›</button>
+        <div class="cal-show-toggle">
+          <button data-show="personal" class="${S.calShow==='personal'?'active':''}">Personal</button>
+          <button data-show="professional" class="${S.calShow==='professional'?'active':''}">Professional</button>
+          <button data-show="both" class="${S.calShow==='both'?'active':''}">Both</button>
+        </div>
       </div>
       <div class="cal-legend">
         <span class="key"><span class="swatch" style="background:var(--hi)"></span>High</span>
         <span class="key"><span class="swatch" style="background:var(--md)"></span>Medium</span>
         <span class="key"><span class="swatch" style="background:var(--lo)"></span>Low</span>
-        <span class="key"><span class="swatch" style="border:1.4px dashed var(--gcal);background:#fff"></span>Google Calendar event (from rules)</span>
+        <span class="key"><span class="swatch" style="border:1.4px dashed var(--gcal);background:#fff"></span>Google Calendar event</span>
+        <span class="key"><span class="swatch" style="background:#f0e9fb"></span>Booking (professional)</span>
       </div>
       <div class="cal-grid">
         ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}
         ${cells.map(c => {
-          const dayTasks = S.tasks.filter(t => t.due===c.iso);
-          const dayEvents = S.externalEvents.filter(e => e.date===c.iso);
+          const showPersonal = S.calShow!=='professional';
+          const showPro = S.calShow!=='personal';
+          const dayTasks = showPersonal ? S.tasks.filter(t => t.due===c.iso) : [];
+          const dayEvents = showPersonal ? S.externalEvents.filter(e => e.date===c.iso) : [];
+          const dayBookings = showPro ? S.bookings.filter(b => b.date===c.iso && b.status==='confirmed') : [];
           return `<div class="cal-cell ${c.other?'other':''} ${c.iso===T?'today-cell':''}" data-date="${c.iso}">
             <span class="daynum">${c.d}</span>
             ${dayTasks.map(t=>`<button class="cal-chip p-${t.priority||'none'} ${t.done?'done':''}" draggable="true" data-id="${t.id}" title="${esc(t.title)}">${esc(t.title)}</button>`).join('')}
             ${dayEvents.map(e=>`<span class="cal-chip gcal-event" title="Lives on the external Google Calendar — created by a rule">${esc(e.title)}</span>`).join('')}
+            ${dayBookings.map(b=>{const et=S.eventTypes.find(x=>x.id===b.eventTypeId); return `<button class="cal-chip booking" data-bkid="${b.id}" title="${esc((et?et.name:'Booking'))} with ${esc(b.inviteeName)} at ${b.start}">${b.start} ${esc(b.inviteeName)}</button>`;}).join('')}
           </div>`;
         }).join('')}
       </div>
@@ -1022,6 +1199,7 @@ function renderSync(){
           ? `<button class="btn ghost" id="btnGoogleDisconnect">Disconnect</button><button class="btn blue" id="btnSyncNow">Sync now</button>`
           : `<button class="btn blue" id="btnGoogleConnect">Connect Google account</button>`}
       </div>
+      <p class="desc" style="margin-top:6px;margin-bottom:0;font-size:.74rem">"Sync now" does two things: backs up app state to Drive, and creates any missing Calendar events for High-priority tasks (covers tasks set to High before you connected).</p>
       <p class="desc" style="margin-top:10px;margin-bottom:0;font-size:.74rem">
         ${g.lastSynced ? `Last synced to Drive: ${new Date(g.lastSynced).toLocaleString()}` : 'Not yet synced to Drive.'}
         Scopes requested: <code style="font-family:'JetBrains Mono';font-size:.68rem">calendar.events</code>, <code style="font-family:'JetBrains Mono';font-size:.68rem">drive.appdata</code> (appdata is invisible to you in normal Drive — it's app-private storage).
@@ -1071,6 +1249,358 @@ function renderSync(){
   </div>`;
 }
 
+/* =====================================================================
+   BOOK TAB — Calendly-style scheduling: event types (reusable meeting
+   templates), a weekly availability schedule with buffers/overrides, and
+   a public booking page that computes real open slots — checking your
+   actual Google Calendar free/busy time when connected, exactly like
+   Calendly's "connect your calendar" feature. Confirmed bookings become
+   real timed Google Calendar events; this is the "professional calendar"
+   layer that sits alongside the personal due-date calendar.
+   ===================================================================== */
+
+const DOW_KEYS = ['sun','mon','tue','wed','thu','fri','sat'];
+const DOW_LABEL = {sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'};
+
+function slugify(s){ return s.toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || uid(); }
+function timeToMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+function minToTime(m){ return `${pad(Math.floor(m/60))}:${pad(m%60)}`; }
+function publicBookingUrl(et){ return `${location.origin}${location.pathname}#book/${et.slug}`; }
+
+/* Real Google Calendar free/busy check — the actual mechanism Calendly
+   uses once you "connect your calendar". Returns busy [start,end] minute
+   ranges (in minutes-from-midnight) for a given date, or [] if not
+   connected (falls back to only checking bookings already in S.bookings). */
+async function gcalBusyRangesForDate(dateISO){
+  if(!(S.google.connected && S.google.clientId)) return [];
+  try{
+    const token = await ensureToken(true);
+    const timeMin = new Date(dateISO+'T00:00:00').toISOString();
+    const timeMax = new Date(dateISO+'T23:59:59').toISOString();
+    const res = await fetch('https://www.googleapis.com/calendar/v3/freeBusy', {
+      method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+      body: JSON.stringify({ timeMin, timeMax, items:[{id:'primary'}] })
+    });
+    if(!res.ok) return [];
+    const data = await res.json();
+    const busy = (data.calendars && data.calendars.primary && data.calendars.primary.busy) || [];
+    return busy.map(b => ({ start: minutesFromMidnight(b.start), end: minutesFromMidnight(b.end) }));
+  }catch(e){ console.warn('freeBusy check failed, falling back to bookings-only', e); return []; }
+}
+function minutesFromMidnight(iso){
+  const d = new Date(iso);
+  return d.getHours()*60 + d.getMinutes();
+}
+
+/* Core slot computation — mirrors Calendly's engine: weekly window minus
+   buffer minus existing bookings minus (optionally) real Google busy time
+   minus minimum-notice minus per-day booking limit. */
+async function computeSlotsForDate(eventType, dateISO){
+  const dow = DOW_KEYS[new Date(dateISO+'T00:00').getDay()];
+  const day = S.availability.weekly[dow];
+  if(!day || !day.enabled) return [];
+  if(S.availability.overrides[dateISO] && S.availability.overrides[dateISO].blocked) return [];
+
+  const now = new Date();
+  const isToday = dateISO===todayISO();
+  const minNoticeMin = now.getTime() + S.availability.minNoticeHours*3600000;
+
+  const dayBookings = S.bookings.filter(b => b.date===dateISO && b.status==='confirmed');
+  if(S.availability.dailyLimit && dayBookings.length >= S.availability.dailyLimit) return [];
+
+  const busy = dayBookings.map(b => ({start:timeToMin(b.start), end:timeToMin(b.end)}));
+  const gcalBusy = await gcalBusyRangesForDate(dateISO);
+  const allBusy = busy.concat(gcalBusy);
+
+  const step = eventType.duration; // start-time increment = event duration (simple, matches most Calendly setups)
+  const slots = [];
+  for(let t=timeToMin(day.start); t+eventType.duration<=timeToMin(day.end); t+=step){
+    const slotStart = t, slotEnd = t+eventType.duration;
+    const bufferedStart = slotStart - eventType.buffer, bufferedEnd = slotEnd + eventType.buffer;
+    const conflicts = allBusy.some(b => bufferedStart < b.end && bufferedEnd > b.start);
+    if(conflicts) continue;
+    const slotDateTime = new Date(dateISO+'T'+minToTime(slotStart));
+    if(isToday && slotDateTime.getTime() < minNoticeMin) continue;
+    if(!isToday && slotDateTime.getTime() < minNoticeMin && slotDateTime.toDateString()===now.toDateString()) continue;
+    slots.push(minToTime(slotStart));
+  }
+  return slots;
+}
+
+/* ---------- Event type CRUD ---------- */
+function upsertEventType(data, id){
+  if(id){
+    const et = S.eventTypes.find(x=>x.id===id); Object.assign(et, data);
+  } else {
+    S.eventTypes.push(Object.assign({id:uid(), slug:slugify(data.name), active:true}, data));
+  }
+  save(); render();
+}
+function deleteEventType(id){
+  S.eventTypes = S.eventTypes.filter(x=>x.id!==id);
+  save(); render();
+}
+function toggleEventType(id){
+  const et = S.eventTypes.find(x=>x.id===id); et.active = !et.active; save(); render();
+}
+
+/* ---------- Booking creation / cancellation (host side) ---------- */
+async function gcalCreateTimedEvent(booking, et){
+  const startISO = `${booking.date}T${booking.start}:00`;
+  const endISO = `${booking.date}T${booking.end}:00`;
+  const body = {
+    summary: `${et.name} — ${booking.inviteeName}`,
+    description: `Booked via My Tasks scheduling page.\n${et.description||''}${booking.note?'\n\nInvitee note: '+booking.note:''}`,
+    start:{dateTime:startISO, timeZone:S.availability.timezone},
+    end:{dateTime:endISO, timeZone:S.availability.timezone},
+    attendees: booking.inviteeEmail ? [{email:booking.inviteeEmail}] : []
+  };
+  const ev = await gcalRequest('POST','/calendars/primary/events?sendUpdates=all', body);
+  booking.gcalEventId = ev.id;
+}
+function cancelBooking(id){
+  const b = S.bookings.find(x=>x.id===id); if(!b) return;
+  b.status = 'cancelled';
+  if(S.google.connected && b.gcalEventId){
+    gcalRequest('DELETE', `/calendars/primary/events/${b.gcalEventId}`).catch(e=>console.error(e));
+  }
+  save(); render(); toast('Booking cancelled');
+}
+
+/* ---------- Internal Book tab (host dashboard) ---------- */
+function renderBook(){
+  const sub = `<div class="book-subtabs">
+    <button data-booksub="types" class="${S.bookView==='types'?'active':''}">Event Types</button>
+    <button data-booksub="availability" class="${S.bookView==='availability'?'active':''}">Availability</button>
+    <button data-booksub="meetings" class="${S.bookView==='meetings'?'active':''}">Meetings</button>
+  </div>`;
+  if(S.bookView==='availability') return sub + renderAvailabilityAdmin();
+  if(S.bookView==='meetings') return sub + renderMeetingsAdmin();
+  return sub + renderEventTypesAdmin();
+}
+
+function renderEventTypesAdmin(){
+  return `<div class="evt-grid">
+    ${S.eventTypes.map(et => `
+      <div class="evt-card ${et.active?'':'inactive'}">
+        <h4><span class="evt-dot" style="background:${et.color}"></span>${esc(et.name)}</h4>
+        <div class="evt-meta">${et.duration} min · ${et.buffer} min buffer · ${et.locationType}</div>
+        <div class="evt-desc">${esc(et.description)}</div>
+        <div class="evt-link-row">${publicBookingUrl(et)}</div>
+        <div class="evt-actions">
+          <button class="btn ghost" data-editevt="${et.id}" style="padding:6px 12px;font-size:.76rem">Edit</button>
+          <button class="btn ghost" data-copyevt="${et.id}" style="padding:6px 12px;font-size:.76rem">Copy link</button>
+          <button class="btn ghost" data-toggleevt="${et.id}" style="padding:6px 12px;font-size:.76rem">${et.active?'Turn off':'Turn on'}</button>
+          <button class="btn danger" data-delevt="${et.id}" style="padding:6px 12px;font-size:.76rem">Delete</button>
+        </div>
+      </div>`).join('')}
+    <div class="evt-new-card" id="btnNewEvt">+ New event type</div>
+  </div>
+  <div id="evtFormSlot"></div>
+  <div class="arch-note" style="margin-top:8px">
+    <h3>How this mirrors Calendly's architecture</h3>
+    Each <b class="k">event type</b> is a reusable meeting template (duration, buffer, description) with its own shareable link — exactly Calendly's core unit. One shared <b class="k">availability schedule</b> (weekly hours + date overrides + minimum notice) governs every event type, same as a Calendly user's default schedule. The public booking page computes open slots live: weekly window → minus buffer → minus existing bookings → minus your real Google Calendar busy time (when connected) → minus minimum notice — the same pipeline Calendly runs after you "connect your calendar." A confirmed booking creates a real timed event on your Google Calendar with the invitee added as an attendee, so Google emails them an invite automatically — no backend required, same as the rest of this app.
+  </div>`;
+}
+
+function renderEvtForm(id){
+  const et = id ? S.eventTypes.find(x=>x.id===id) : {name:'',duration:30,buffer:10,color:'#f25d52',description:'',locationType:'video',questionLabel:''};
+  return `<div class="evt-form">
+    <h3 style="font-family:'Sora';margin-bottom:12px">${id?'Edit event type':'New event type'}</h3>
+    <div class="grid2">
+      <div class="field"><label>Name</label><input id="efName" type="text" value="${esc(et.name)}" placeholder="e.g. Intro call"></div>
+      <div class="field"><label>Location</label>
+        <select id="efLoc">
+          <option value="video" ${et.locationType==='video'?'selected':''}>Video call</option>
+          <option value="phone" ${et.locationType==='phone'?'selected':''}>Phone call</option>
+          <option value="inperson" ${et.locationType==='inperson'?'selected':''}>In person</option>
+        </select>
+      </div>
+      <div class="field"><label>Duration (minutes)</label><input id="efDur" type="number" min="5" step="5" value="${et.duration}"></div>
+      <div class="field"><label>Buffer before/after (minutes)</label><input id="efBuf" type="number" min="0" step="5" value="${et.buffer}"></div>
+      <div class="field"><label>Color</label><input id="efColor" type="color" value="${et.color}" style="height:38px;padding:2px"></div>
+      <div class="field"><label>Invitee question</label><input id="efQ" type="text" value="${esc(et.questionLabel||'')}" placeholder="e.g. What would you like to cover?"></div>
+    </div>
+    <div class="field" style="margin-top:12px"><label>Description (shown on booking page)</label><textarea id="efDesc" style="min-height:60px">${esc(et.description)}</textarea></div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn accent" id="efSave">Save event type</button>
+      <button class="btn ghost" id="efCancel">Cancel</button>
+    </div>
+  </div>`;
+}
+
+function renderAvailabilityAdmin(){
+  const a = S.availability;
+  return `<div class="avail-card">
+    <h3 style="font-family:'Sora';margin-bottom:14px">Weekly hours</h3>
+    ${DOW_KEYS.map(k => { const d=a.weekly[k]; return `
+      <div class="avail-day-row">
+        <label class="switch"><input type="checkbox" data-avday="${k}" ${d.enabled?'checked':''}><span class="track"></span></label>
+        <span class="dayname">${DOW_LABEL[k]}</span>
+        ${d.enabled ? `<input type="time" data-avstart="${k}" value="${d.start}"><span class="to">to</span><input type="time" data-avend="${k}" value="${d.end}">` : '<span style="color:var(--ink-faint);font-size:.82rem">Unavailable</span>'}
+      </div>`;}).join('')}
+  </div>
+  <div class="avail-card">
+    <h3 style="font-family:'Sora';margin-bottom:14px">Rules</h3>
+    <div class="avail-row"><label>Timezone</label><input id="avTz" type="text" value="${esc(a.timezone)}" style="flex:1;border:1px solid var(--line);border-radius:7px;padding:6px 9px"></div>
+    <div class="avail-row"><label>Minimum notice (hours)</label><input id="avNotice" type="number" min="0" value="${a.minNoticeHours}"></div>
+    <div class="avail-row"><label>Max bookings per day</label><input id="avLimit" type="number" min="0" placeholder="No limit" value="${a.dailyLimit||''}"></div>
+    <button class="btn primary" id="avSave" style="margin-top:6px">Save rules</button>
+  </div>
+  <div class="avail-card">
+    <h3 style="font-family:'Sora';margin-bottom:10px">Blocked dates</h3>
+    <div style="margin-bottom:10px">
+      ${Object.keys(a.overrides).filter(d=>a.overrides[d].blocked).map(d=>`<span class="override-tag">${d}<button data-unblock="${d}">✕</button></span>`).join('') || '<span class="empty-note">No dates blocked.</span>'}
+    </div>
+    <div style="display:flex;gap:8px"><input id="avBlockDate" type="date"><button class="btn ghost" id="avBlockBtn">Block date</button></div>
+  </div>`;
+}
+
+function renderMeetingsAdmin(){
+  const upcoming = S.bookings.filter(b => b.date >= todayISO()).sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start));
+  const past = S.bookings.filter(b => b.date < todayISO()).sort((a,b)=>b.date.localeCompare(a.date));
+  const row = b => {
+    const et = S.eventTypes.find(x=>x.id===b.eventTypeId);
+    const d = new Date(b.date+'T00:00');
+    return `<div class="mtg-row ${b.status==='cancelled'?'cancelled':''}">
+      <div class="mtg-date"><span class="dow">${d.toLocaleDateString(undefined,{weekday:'short'})}</span><span class="dnum">${d.getDate()}</span></div>
+      <div class="mtg-info">
+        <div class="mtg-title">${esc(et?et.name:'Meeting')} with ${esc(b.inviteeName)}</div>
+        <div class="mtg-sub">${b.start}–${b.end} · ${esc(b.inviteeEmail)}${b.note?' · "'+esc(b.note)+'"':''}</div>
+      </div>
+      ${b.status==='confirmed' ? `<button class="btn danger" data-cancelbk="${b.id}" style="padding:6px 12px;font-size:.76rem">Cancel</button>` : `<span class="pill" style="background:var(--hi-bg);color:var(--hi)">Cancelled</span>`}
+    </div>`;
+  };
+  return `<h3 style="font-family:'Sora';margin-bottom:10px;font-size:.95rem">Upcoming</h3>
+    ${upcoming.map(row).join('') || '<div class="empty-note">No upcoming bookings.</div>'}
+    <h3 style="font-family:'Sora';margin:18px 0 10px;font-size:.95rem">Past</h3>
+    ${past.map(row).join('') || '<div class="empty-note">Nothing yet.</div>'}`;
+}
+
+/* ---------- Public booking page (standalone) ---------- */
+let pubState = { et:null, date:null, slots:[], selectedTime:null, step:'date' };
+
+async function renderPublicBooking(slug){
+  const et = S.eventTypes.find(x => x.slug===slug && x.active);
+  const root = document.getElementById('publicBookingRoot');
+  if(!et){ root.innerHTML = `<div class="pub-card"><div class="pub-body"><h2 style="font-family:'Sora'">Scheduling page not found</h2><p style="color:var(--ink-soft)">This event type doesn't exist or isn't active.</p></div></div>`; return; }
+  if(pubState.et !== et.id){ pubState = { et: et.id, date:null, slots:[], selectedTime:null, step:'date' }; }
+
+  const dates = [];
+  for(let i=0;i<14;i++) dates.push(addDays(todayISO(), i));
+  if(!pubState.date) pubState.date = dates.find(d => {
+    const dow = DOW_KEYS[new Date(d+'T00:00').getDay()];
+    return S.availability.weekly[dow].enabled && !(S.availability.overrides[d]&&S.availability.overrides[d].blocked);
+  }) || dates[0];
+
+  root.innerHTML = `<div class="pub-card">
+    <div class="pub-head">
+      <span class="evt-dot" style="background:${et.color}"></span>
+      <div>
+        <h2>${esc(et.name)}</h2>
+        <p>${esc(et.description)}</p>
+        <div class="pub-meta"><span>⏱ ${et.duration} min</span><span>📍 ${et.locationType==='video'?'Video call':et.locationType==='phone'?'Phone call':'In person'}</span><span>🌐 ${esc(S.availability.timezone)}</span></div>
+      </div>
+    </div>
+    <div class="pub-body" id="pubBody">Loading availability…</div>
+    <div class="pub-footer-link">Powered by your own My Tasks scheduling page — no third-party service involved.</div>
+  </div>`;
+  await renderPubStep();
+}
+
+async function renderPubStep(){
+  const et = S.eventTypes.find(x=>x.id===pubState.et);
+  const body = document.getElementById('pubBody');
+  if(pubState.step==='confirmed'){
+    const b = pubState.confirmedBooking;
+    const gUrl = googleAddUrl(et, b);
+    body.innerHTML = `<div class="pub-confirm">
+      <div class="check-big">✓</div>
+      <h2>You're booked!</h2>
+      <p>${esc(et.name)} with you on ${new Date(b.date+'T00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})} at ${b.start}.</p>
+      <div class="btn-row" style="justify-content:center">
+        <a class="btn blue" href="${gUrl}" target="_blank" rel="noopener">Add to Google Calendar</a>
+        <button class="btn ghost" id="pubIcsBtn">Download .ics</button>
+      </div>
+    </div>`;
+    document.getElementById('pubIcsBtn').addEventListener('click', () => download(`${et.slug}.ics`, icsForBooking(et,b), 'text/calendar'));
+    return;
+  }
+
+  const dates = []; for(let i=0;i<14;i++) dates.push(addDays(todayISO(), i));
+  const dateStrip = `<div class="pub-dates">${dates.map(d => {
+    const dow = DOW_KEYS[new Date(d+'T00:00').getDay()];
+    const blocked = !S.availability.weekly[dow].enabled || (S.availability.overrides[d]&&S.availability.overrides[d].blocked);
+    const dt = new Date(d+'T00:00');
+    return `<button class="pub-date-btn ${d===pubState.date?'active':''}" data-pubdate="${d}" ${blocked?'disabled':''}>
+      <span class="d">${dt.toLocaleDateString(undefined,{weekday:'short'})}</span>${dt.getDate()}
+    </button>`;
+  }).join('')}</div>`;
+
+  if(pubState.step==='form'){
+    body.innerHTML = dateStrip + `
+      <div class="pub-form">
+        <p style="font-size:.85rem;margin-bottom:14px"><b>${new Date(pubState.date+'T00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})} at ${pubState.selectedTime}</b> · <button id="pubBack" style="color:var(--accent);font-weight:600">change time</button></p>
+        <div class="field"><label>Name</label><input id="pfName" type="text" placeholder="Your name"></div>
+        <div class="field"><label>Email</label><input id="pfEmail" type="email" placeholder="you@example.com"></div>
+        ${et.questionLabel ? `<div class="field"><label>${esc(et.questionLabel)}</label><textarea id="pfNote"></textarea></div>` : ''}
+        <button class="btn accent" id="pfConfirm" style="width:100%;padding:11px">Confirm booking</button>
+      </div>`;
+    wirePublic();
+    return;
+  }
+
+  body.innerHTML = dateStrip + `<div id="pubSlotsWrap">Loading times…</div>`;
+  wirePublic();
+  const slots = await computeSlotsForDate(et, pubState.date);
+  const wrap = document.getElementById('pubSlotsWrap');
+  if(!wrap) return; // user navigated away before slots resolved
+  wrap.innerHTML = slots.length
+    ? `<div class="pub-slots">${slots.map(s=>`<button class="pub-slot-btn" data-pubslot="${s}">${s}</button>`).join('')}</div>`
+    : `<div class="empty-note">No open times this day — try another date.</div>`;
+  wirePublic();
+}
+
+function googleAddUrl(et, b){
+  const start = `${b.date.replace(/-/g,'')}T${b.start.replace(':','')}00`;
+  const end = `${b.date.replace(/-/g,'')}T${b.end.replace(':','')}00`;
+  const params = new URLSearchParams({ action:'TEMPLATE', text:`${et.name} with ${b.inviteeName}`, dates:`${start}/${end}`, details: et.description||'' });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+function icsForBooking(et, b){
+  const stamp = new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const s = `${b.date.replace(/-/g,'')}T${b.start.replace(':','')}00`;
+  const e = `${b.date.replace(/-/g,'')}T${b.end.replace(':','')}00`;
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//AsanaDemo//Booking//EN','BEGIN:VEVENT',
+    `UID:${b.id}@asana-demo`, `DTSTAMP:${stamp}`, `DTSTART:${s}`, `DTEND:${e}`,
+    `SUMMARY:${et.name} with ${b.inviteeName}`, `DESCRIPTION:${(et.description||'').replace(/\n/g,'\\n')}`,
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+}
+
+function wirePublic(){
+  document.querySelectorAll('[data-pubdate]').forEach(b => b.addEventListener('click', () => { pubState.date = b.dataset.pubdate; pubState.step='date'; renderPubStep(); }));
+  document.querySelectorAll('[data-pubslot]').forEach(b => b.addEventListener('click', () => { pubState.selectedTime = b.dataset.pubslot; pubState.step='form'; renderPubStep(); }));
+  const back = document.getElementById('pubBack');
+  if(back) back.addEventListener('click', () => { pubState.step='date'; renderPubStep(); });
+  const confirm = document.getElementById('pfConfirm');
+  if(confirm) confirm.addEventListener('click', async () => {
+    const name = document.getElementById('pfName').value.trim();
+    const email = document.getElementById('pfEmail').value.trim();
+    if(!name || !email){ toast('Name and email are required'); return; }
+    const et = S.eventTypes.find(x=>x.id===pubState.et);
+    const noteEl = document.getElementById('pfNote');
+    const b = { id:uid(), eventTypeId:et.id, date:pubState.date, start:pubState.selectedTime,
+      end:minToTime(timeToMin(pubState.selectedTime)+et.duration), inviteeName:name, inviteeEmail:email,
+      note: noteEl?noteEl.value.trim():'', status:'confirmed', gcalEventId:null, createdAt:todayISO() };
+    S.bookings.push(b);
+    confirm.disabled = true; confirm.textContent = 'Booking…';
+    if(S.google.connected){ try{ await gcalCreateTimedEvent(b, et); }catch(e){ console.error(e); } }
+    save();
+    pubState.step = 'confirmed'; pubState.confirmedBooking = b;
+    renderPubStep();
+  });
+}
+
 /* ---------- Dynamic wiring per render ---------- */
 function wireDynamic(){
   // open drawer / complete
@@ -1107,6 +1637,12 @@ function wireDynamic(){
     const d = new Date(y, m-1+Number(b.dataset.nav), 1);
     S.calMonth = `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
     save(); render();
+  }));
+  document.querySelectorAll('.cal-show-toggle button').forEach(b => b.addEventListener('click', () => { S.calShow = b.dataset.show; save(); render(); }));
+  document.querySelectorAll('.cal-chip.booking').forEach(b => b.addEventListener('click', () => {
+    const bk = S.bookings.find(x=>x.id===b.dataset.bkid); if(!bk) return;
+    const et = S.eventTypes.find(x=>x.id===bk.eventTypeId);
+    toast(`${et?et.name:'Booking'} · ${bk.start}–${bk.end} · ${bk.inviteeName}${bk.inviteeEmail?' ('+bk.inviteeEmail+')':''}`);
   }));
   document.querySelectorAll('.cal-chip[data-id]').forEach(c => {
     c.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', c.dataset.id));
@@ -1157,8 +1693,69 @@ function wireDynamic(){
   const gd = document.getElementById('btnGoogleDisconnect');
   if(gd) gd.addEventListener('click', disconnectGoogle);
   const gs = document.getElementById('btnSyncNow');
-  if(gs) gs.addEventListener('click', () => { driveSaveState().then(()=>{render(); toast('Synced to Google Drive');}).catch(e=>{console.error(e); toast('Sync failed — see console');}); });
+  if(gs) gs.addEventListener('click', async () => {
+    try{
+      const created = await reconcileCalendar();
+      await driveSaveState();
+      render();
+      toast(created ? `Synced — created ${created} missing calendar event${created===1?'':'s'}` : 'Synced to Google Drive');
+    }catch(e){ console.error(e); toast('Sync failed — see console'); }
+  });
 
+  // book tab — subnav
+  document.querySelectorAll('[data-booksub]').forEach(b => b.addEventListener('click', () => { S.bookView = b.dataset.booksub; save(); render(); }));
+
+  // book tab — event types
+  const bne = document.getElementById('btnNewEvt');
+  if(bne) bne.addEventListener('click', () => { document.getElementById('evtFormSlot').innerHTML = renderEvtForm(null); wireEvtForm(null); });
+  document.querySelectorAll('[data-editevt]').forEach(b => b.addEventListener('click', () => { document.getElementById('evtFormSlot').innerHTML = renderEvtForm(b.dataset.editevt); wireEvtForm(b.dataset.editevt); }));
+  document.querySelectorAll('[data-delevt]').forEach(b => b.addEventListener('click', () => { if(confirm('Delete this event type? Existing bookings are kept.')) deleteEventType(b.dataset.delevt); }));
+  document.querySelectorAll('[data-toggleevt]').forEach(b => b.addEventListener('click', () => toggleEventType(b.dataset.toggleevt)));
+  document.querySelectorAll('[data-copyevt]').forEach(b => b.addEventListener('click', async () => {
+    const et = S.eventTypes.find(x=>x.id===b.dataset.copyevt);
+    try{ await navigator.clipboard.writeText(publicBookingUrl(et)); toast('Booking link copied'); }
+    catch(e){ toast(publicBookingUrl(et)); }
+  }));
+
+  // book tab — availability
+  document.querySelectorAll('[data-avday]').forEach(cb => cb.addEventListener('change', () => { S.availability.weekly[cb.dataset.avday].enabled = cb.checked; save(); render(); }));
+  document.querySelectorAll('[data-avstart]').forEach(i => i.addEventListener('change', () => { S.availability.weekly[i.dataset.avstart].start = i.value; save(); }));
+  document.querySelectorAll('[data-avend]').forEach(i => i.addEventListener('change', () => { S.availability.weekly[i.dataset.avend].end = i.value; save(); }));
+  const avSave = document.getElementById('avSave');
+  if(avSave) avSave.addEventListener('click', () => {
+    S.availability.timezone = document.getElementById('avTz').value.trim() || S.availability.timezone;
+    S.availability.minNoticeHours = Number(document.getElementById('avNotice').value)||0;
+    const lim = document.getElementById('avLimit').value;
+    S.availability.dailyLimit = lim ? Number(lim) : null;
+    save(); render(); toast('Availability rules saved');
+  });
+  const avBlockBtn = document.getElementById('avBlockBtn');
+  if(avBlockBtn) avBlockBtn.addEventListener('click', () => {
+    const d = document.getElementById('avBlockDate').value; if(!d) return;
+    S.availability.overrides[d] = {blocked:true}; save(); render();
+  });
+  document.querySelectorAll('[data-unblock]').forEach(b => b.addEventListener('click', () => { delete S.availability.overrides[b.dataset.unblock]; save(); render(); }));
+
+  // book tab — meetings
+  document.querySelectorAll('[data-cancelbk]').forEach(b => b.addEventListener('click', () => { if(confirm('Cancel this booking?')) cancelBooking(b.dataset.cancelbk); }));
+}
+
+function wireEvtForm(id){
+  document.getElementById('efCancel').addEventListener('click', () => { document.getElementById('evtFormSlot').innerHTML=''; });
+  document.getElementById('efSave').addEventListener('click', () => {
+    const name = document.getElementById('efName').value.trim() || 'Untitled event';
+    const data = {
+      name, locationType: document.getElementById('efLoc').value,
+      duration: Number(document.getElementById('efDur').value)||30,
+      buffer: Number(document.getElementById('efBuf').value)||0,
+      color: document.getElementById('efColor').value,
+      questionLabel: document.getElementById('efQ').value.trim(),
+      description: document.getElementById('efDesc').value.trim()
+    };
+    if(!id) data.slug = slugify(name);
+    upsertEventType(data, id);
+    toast(id ? 'Event type updated' : 'Event type created');
+  });
 }
 
 /* ---------- Drawer ---------- */
@@ -1257,6 +1854,15 @@ function toast(msg){
 }
 
 init();
+window.addEventListener('hashchange', route);
+function route(){
+  const hash = location.hash; // '#book/<slug>' → public booking page, no app chrome
+  const m = hash.match(/^#book\/(.+)$/);
+  document.getElementById('appRoot').style.display = m ? 'none' : '';
+  document.getElementById('publicBookingRoot').style.display = m ? 'flex' : 'none';
+  if(m) renderPublicBooking(decodeURIComponent(m[1]));
+}
+route();
 
 // Register the service worker (installable, offline-capable app shell).
 // Safe no-op if served somewhere that doesn't support it (e.g. file://).
