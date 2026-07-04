@@ -1,0 +1,59 @@
+name: pages-build-deployment
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (if needed)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+        # if you don't use Node.js, this step is harmless
+
+      - name: Install dependencies (if package.json exists)
+        run: |
+          if [ -f package.json ]; then npm ci; fi
+
+      - name: Build site (if build script exists)
+        run: |
+          if [ -f package.json ] && grep -q '"build"' package.json; then npm run build || true; fi
+
+      - name: Prepare Pages artifact (ensure site at root)
+        run: |
+          set -e
+          rm -rf pages-artifact
+          mkdir pages-artifact
+          # copy common build output locations into the artifact root
+          if [ -d public ]; then cp -a public/. pages-artifact/ || true; fi
+          if [ -d build ]; then cp -a build/. pages-artifact/ || true; fi
+          if [ -d dist ]; then cp -a dist/. pages-artifact/ || true; fi
+          # fallback: if index.html exists at repo root, copy repo root (excluding .git)
+          if [ -f index.html ]; then rsync -a --exclude '.git' ./ pages-artifact/ || true; fi
+          echo "=== Artifact root listing (top-level) ==="
+          ls -la pages-artifact || true
+          echo "=== Recursive artifact listing ==="
+          ls -laR pages-artifact || true
+          echo "=== Ensure index.html exists at artifact root ==="
+          if [ ! -f pages-artifact/index.html ]; then echo "WARNING: pages-artifact/index.html not found"; fi
+
+      - name: Upload artifact for Pages
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: pages-artifact
+          artifact_name: github-pages
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v5
