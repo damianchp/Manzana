@@ -1618,6 +1618,10 @@ function renderMeetingsAdmin(){
   if(sbConfigured()) maybeSyncMeetings(); // pull shared bookings + create missing calendar events
   const upcoming = S.bookings.filter(b => b.date >= todayISO()).sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start));
   const past = S.bookings.filter(b => b.date < todayISO()).sort((a,b)=>b.date.localeCompare(a.date));
+  const header = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn primary" id="btnRefreshMeetings" style="padding:8px 16px">↻ Refresh bookings</button>
+    <span style="font-size:.76rem;color:var(--ink-faint)">${sbConfigured() ? 'Pulls new bookings from the backend and adds missing ones to your Google Calendar.' : 'Backend not configured — showing local bookings only.'} ${!S.google.connected ? 'Google is disconnected, so calendar events will NOT be created — reconnect in the Sync tab.' : ''}</span>
+  </div>`;
   const row = b => {
     const et = S.eventTypes.find(x=>x.id===b.eventTypeId);
     const name = et ? et.name : (b.eventTypeName || 'Meeting');
@@ -1631,7 +1635,7 @@ function renderMeetingsAdmin(){
       ${b.status==='confirmed' ? `<button class="btn danger" data-cancelbk="${b.id}" style="padding:6px 12px;font-size:.76rem">Cancel</button>` : `<span class="pill" style="background:var(--hi-bg);color:var(--hi)">Cancelled</span>`}
     </div>`;
   };
-  return `<h3 style="font-family:'Sora';margin-bottom:10px;font-size:.95rem">Upcoming</h3>
+  return header + `<h3 style="font-family:'Sora';margin-bottom:10px;font-size:.95rem">Upcoming</h3>
     ${upcoming.map(row).join('') || '<div class="empty-note">No upcoming bookings.</div>'}
     <h3 style="font-family:'Sora';margin:18px 0 10px;font-size:.95rem">Past</h3>
     ${past.map(row).join('') || '<div class="empty-note">Nothing yet.</div>'}`;
@@ -2034,6 +2038,8 @@ function wireDynamic(){
 
   // book tab — meetings
   document.querySelectorAll('[data-cancelbk]').forEach(b => b.addEventListener('click', () => { if(confirm('Cancel this booking?')) cancelBooking(b.dataset.cancelbk); }));
+  const brm = document.getElementById('btnRefreshMeetings');
+  if(brm) brm.addEventListener('click', () => { toast('Refreshing bookings…'); maybeSyncMeetings(true); });
 }
 
 function wireEvtForm(id){

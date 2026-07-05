@@ -55,3 +55,12 @@ be serving a cached copy — pull-to-refresh or fully close/reopen the app once.
 - **Public repo**: your task titles/notes aren't secret from anyone who finds
   the repo, but no one can *use* the app as you unless they have your Google
   login — the data itself lives in your Drive/Calendar, not in the repo.
+
+
+## Booking backend (Supabase)
+
+The scheduling/booking feature needs a shared database so visitors can't
+double-book. See `SUPABASE_SETUP.md` for the ~10-minute free setup: create a
+Supabase project, run the provided SQL, and paste two public keys into the
+app's Sync tab. Without it, bookings save only locally (fine for personal
+testing).
