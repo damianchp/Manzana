@@ -1339,7 +1339,10 @@ async function sbBookedSlotsForDate(dateISO){
     return rows.map(r => ({ start: r.start_time.slice(0,5), end: r.end_time.slice(0,5) }));
   }catch(e){ console.warn('Supabase read failed', e); return []; }
 }
-/* Public insert of a new booking. Returns the created row (with id). */
+/* Public insert of a new booking. Uses return=minimal because the public
+   role deliberately has NO read permission on bookings — asking PostgREST
+   to return the created row would be rejected. We already know the row
+   (we generated the id client-side). */
 async function sbInsertBooking(b, et){
   const row = {
     id: b.id, event_type_id: et.id, event_type_name: et.name,
@@ -1347,8 +1350,8 @@ async function sbInsertBooking(b, et){
     invitee_name: b.inviteeName, invitee_email: b.inviteeEmail,
     note: b.note||'', status:'confirmed'
   };
-  const res = await sbRequest('POST', '/bookings', row, {'Prefer':'return=representation'});
-  return res && res[0];
+  await sbRequest('POST', '/bookings', row, {'Prefer':'return=minimal'});
+  return b;
 }
 /* Host read: full booking rows including invitee PII. Works from your
    browser; the RLS policy can gate this to a shared secret header if you
@@ -1368,6 +1371,19 @@ async function sbFetchAllBookings(){
 async function sbUpdateBooking(id, patch){
   if(!sbConfigured()) return;
   try{ await sbRequest('PATCH', `/bookings?id=eq.${id}`, patch, S.supabase.hostKey?{'x-host-key':S.supabase.hostKey}:{}); }catch(e){ console.warn('Supabase update failed', e); }
+}
+
+/* Probe: does the backend accept our host key? Calls the is_host() SQL
+   function via RPC. Lets us distinguish "no bookings exist" from "the
+   host key is wrong so reads silently return nothing". */
+async function sbIsHost(){
+  try{
+    const res = await fetch(S.supabase.url.replace(/\/$/,'')+'/rest/v1/rpc/is_host', {
+      method:'POST', headers: sbHostHeaders(), body:'{}'
+    });
+    if(!res.ok) return null;      // function missing / older SQL — can't tell
+    return (await res.json()) === true;
+  }catch(e){ return null; }
 }
 
 /* Publish the host's scheduling config (event types + availability) to a
@@ -1652,10 +1668,20 @@ async function maybeSyncMeetings(force){
   if(meetingsSyncedOnce && !force) return;
   meetingsSyncing = true;
   try{
+    // Verify the host key first — otherwise reads silently return nothing
+    // and we'd show (and store) a misleading empty list.
+    const hostOk = await sbIsHost();
+    if(hostOk === false){
+      toast('Host key missing or wrong — enter it in Sync → Booking backend, then Refresh');
+      meetingsSyncing = false; return;
+    }
     const remote = await sbFetchAllBookings();
-    if(remote){
+    if(remote !== null){
       S.bookings = remote;            // Supabase is the source of truth for bookings
       save();
+      if(force) toast(remote.length ? `Pulled ${remote.length} booking${remote.length===1?'':'s'} from backend` : 'Backend reachable — no bookings recorded yet');
+    } else if(force){
+      toast('Could not read bookings from backend — see console');
     }
     // Create missing calendar events for confirmed bookings (needs your Google login)
     if(S.google.connected){
@@ -1669,10 +1695,12 @@ async function maybeSyncMeetings(force){
         }catch(e){ console.error('calendar create failed for booking', b.id, e); }
       }
       if(created){ save(); toast(`Added ${created} booking${created===1?'':'s'} to your Google Calendar`); }
+    } else if(force && S.bookings.some(x=>x.status==='confirmed' && !x.gcalEventId)){
+      toast('Bookings pulled, but Google is disconnected — reconnect in Sync to add them to your calendar');
     }
     meetingsSyncedOnce = true;
     render();
-  }catch(e){ console.error('meeting sync failed', e); }
+  }catch(e){ console.error('meeting sync failed', e); if(force) toast('Sync failed — see console'); }
   finally{ meetingsSyncing = false; }
 }
 
