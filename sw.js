@@ -1,6 +1,6 @@
 // Minimal app-shell cache. Bump CACHE_NAME whenever index.html changes
 // meaningfully so returning visitors get the fresh version.
-const CACHE_NAME = 'my-tasks-shell-v3';
+const CACHE_NAME = 'my-tasks-shell-v4';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {

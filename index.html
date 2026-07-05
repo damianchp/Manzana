@@ -1554,7 +1554,12 @@ function renderBook(){
 }
 
 function renderEventTypesAdmin(){
-  return `<div class="evt-grid">
+  const restoreBar = (!S.eventTypes.length && sbConfigured())
+    ? `<div class="avail-card" style="border-color:var(--md);background:var(--md-bg)">
+         <p style="font-size:.85rem;margin-bottom:10px"><b>No event types locally.</b> If you previously published them to the backend, you can restore them:</p>
+         <button class="btn primary" id="btnRestoreCfg">Restore event types from backend</button>
+       </div>` : '';
+  return restoreBar + `<div class="evt-grid">
     ${S.eventTypes.map(et => `
       <div class="evt-card ${et.active?'':'inactive'}">
         <h4><span class="evt-dot" style="background:${et.color}"></span>${esc(et.name)}</h4>
@@ -1720,7 +1725,10 @@ async function renderPublicBooking(slug){
   }
   if(sbConfigured() && (!S.eventTypes || !S.eventTypes.length || !S.eventTypes.some(e=>e.slug===slug))){
     const cfg = await sbFetchConfig();
-    if(cfg){ S.eventTypes = cfg.eventTypes || S.eventTypes; S.availability = cfg.availability || S.availability; }
+    // Only adopt backend config that actually has content — an empty
+    // event_types array must never wipe local data.
+    if(cfg && Array.isArray(cfg.eventTypes) && cfg.eventTypes.length) S.eventTypes = cfg.eventTypes;
+    if(cfg && cfg.availability && cfg.availability.weekly) S.availability = cfg.availability;
   }
 
   const et = S.eventTypes.find(x => x.slug===slug && x.active);
@@ -2036,6 +2044,18 @@ function wireDynamic(){
   // book tab — event types
   const bne = document.getElementById('btnNewEvt');
   if(bne) bne.addEventListener('click', () => { document.getElementById('evtFormSlot').innerHTML = renderEvtForm(null); wireEvtForm(null); });
+  const brc = document.getElementById('btnRestoreCfg');
+  if(brc) brc.addEventListener('click', async () => {
+    const cfg = await sbFetchConfig();
+    if(cfg && Array.isArray(cfg.eventTypes) && cfg.eventTypes.length){
+      S.eventTypes = cfg.eventTypes;
+      if(cfg.availability && cfg.availability.weekly) S.availability = cfg.availability;
+      save(); render();
+      toast(`Restored ${cfg.eventTypes.length} event type${cfg.eventTypes.length===1?'':'s'} from backend`);
+    } else {
+      toast('Backend has no event types stored either — recreate them (takes a minute), they will re-publish automatically');
+    }
+  });
   document.querySelectorAll('[data-editevt]').forEach(b => b.addEventListener('click', () => { document.getElementById('evtFormSlot').innerHTML = renderEvtForm(b.dataset.editevt); wireEvtForm(b.dataset.editevt); }));
   document.querySelectorAll('[data-delevt]').forEach(b => b.addEventListener('click', () => { if(confirm('Delete this event type? Existing bookings are kept.')) deleteEventType(b.dataset.delevt); }));
   document.querySelectorAll('[data-toggleevt]').forEach(b => b.addEventListener('click', () => toggleEventType(b.dataset.toggleevt)));
