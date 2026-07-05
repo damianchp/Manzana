@@ -1756,6 +1756,7 @@ async function renderPublicBooking(slug){
       </div>
     </div>
     <div class="pub-body" id="pubBody">Loading availability…</div>
+    ${sbConfigured() ? '' : `<div style="background:var(--md-bg);color:var(--md);font-size:.78rem;font-weight:600;padding:10px 26px">⚠ Demo mode: no booking backend is configured, so this booking will NOT reach the host. (Host: fill in BUILD_SUPABASE in index.html.)</div>`}
     <div class="pub-footer-link">Powered by your own My Tasks scheduling page — no third-party service involved.</div>
   </div>`;
   await renderPubStep();
