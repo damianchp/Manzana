@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>My Tasks</title>
+<title>Manzana</title>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#1d2733">
 <link rel="icon" href="./icon-192.png">
@@ -49,7 +49,8 @@ header.topbar{
   position:sticky;top:0;z-index:40;
 }
 .logo{display:flex;align-items:center;gap:9px;font-family:'Sora';font-weight:700;font-size:1.05rem;letter-spacing:-.01em}
-.logo .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(242,93,82,.25)}
+.logo .dot{width:11px;height:11px;border-radius:50% 50% 48% 48%;background:#6cc04a;box-shadow:0 0 0 4px rgba(108,192,74,.22);position:relative}
+.logo .dot::after{content:"";position:absolute;top:-4px;left:55%;width:6px;height:4px;border-radius:60% 40% 60% 40%;background:#3f8f2f}
 .topbar .sub{font-size:.78rem;color:#9aa7b6;font-weight:400}
 .topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
 .chip-btn{
@@ -442,6 +443,40 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
 .cal-chip.booking{background:#f0e9fb;color:#7c4fd1;border:1px solid transparent}
 .cal-chip.booking::before{content:"◐ ";}
 
+/* ---------- AI Assistant (Gemini) ---------- */
+#aiFab{
+  position:fixed;right:22px;bottom:22px;width:52px;height:52px;border-radius:50%;
+  background:var(--ink);color:#fff;font-size:1.3rem;box-shadow:0 6px 20px rgba(29,39,51,.28);
+  z-index:70;transition:transform .15s;
+}
+#aiFab:hover{transform:scale(1.06)}
+#aiPanel{
+  position:fixed;right:22px;bottom:86px;width:min(380px,92vw);max-height:min(70vh,560px);
+  background:var(--card);border-radius:16px;box-shadow:0 12px 40px rgba(29,39,51,.22);
+  z-index:70;display:none;flex-direction:column;overflow:hidden;border:1px solid var(--line);
+}
+body.ai-open #aiPanel{display:flex}
+.ai-head{
+  display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--ink);color:#fff;
+  font-family:'Sora';font-weight:600;font-size:.88rem;
+}
+.ai-head button{margin-left:auto;color:#c7d1dd}
+.ai-quicks{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.ai-quicks button{
+  font-size:.72rem;font-weight:600;padding:6px 10px;border-radius:99px;background:var(--paper);
+  color:var(--ink-soft);border:1px solid var(--line);
+}
+.ai-quicks button:hover{border-color:var(--accent);color:var(--accent)}
+.ai-messages{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-height:120px}
+.ai-msg{max-width:86%;font-size:.85rem;line-height:1.5;padding:9px 12px;border-radius:12px;white-space:pre-wrap}
+.ai-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:3px}
+.ai-msg.bot{align-self:flex-start;background:var(--paper);color:var(--ink);border-bottom-left-radius:3px}
+.ai-msg.bot.thinking{color:var(--ink-faint);font-style:italic}
+.ai-msg.bot.setup-needed{background:var(--md-bg);color:var(--md)}
+.ai-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+.ai-input-row input{flex:1;border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:.85rem}
+.ai-input-row button{width:36px;border-radius:9px;background:var(--accent);color:#fff;font-weight:700}
+
 /* ---------- Cloud sync card ---------- */
 .cloud-card .status-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .status-dot{width:9px;height:9px;border-radius:50%;background:#cfd6df}
@@ -465,7 +500,7 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
 
 <div id="appRoot">
 <header class="topbar">
-  <div class="logo"><span class="dot"></span>My Tasks <span class="sub">· Asana architecture demo</span></div>
+  <div class="logo"><span class="dot"></span>Manzana</div>
   <div class="topbar-right">
     <span class="gpill" id="gPill"><span class="dot2"></span><span id="gPillText">Google: not connected</span></span>
     <button class="chip-btn" id="btnExportJson" title="Download full app state as JSON">Export JSON</button>
@@ -548,6 +583,25 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
   </div>
 </aside>
 
+<button id="aiFab" aria-label="Open assistant" title="Ask about your day">✦</button>
+<div id="aiPanel" aria-label="Assistant">
+  <div class="ai-head">
+    <span>✦ Assistant</span>
+    <button id="aiClose" aria-label="Close assistant">✕</button>
+  </div>
+  <div class="ai-quicks" id="aiQuicks">
+    <button data-q="Summarize my day.">Summarize my day</button>
+    <button data-q="What are my top priorities this week?">Top priorities this week</button>
+    <button data-q="What's on my schedule tomorrow?">Tomorrow's schedule</button>
+    <button data-q="What meetings do I have coming up?">Upcoming meetings</button>
+  </div>
+  <div class="ai-messages" id="aiMessages"></div>
+  <div class="ai-input-row">
+    <input id="aiInput" type="text" placeholder="Ask about your tasks, bookings, focus…">
+    <button id="aiSend" aria-label="Send">→</button>
+  </div>
+</div>
+
 <div id="toast" role="status"></div>
 </div><!-- /appRoot -->
 
@@ -616,7 +670,8 @@ function seedState(){
     calMonth: T.slice(0,7),
     rules: {
       highToEvent: true,     // Rule: priority → High creates a GCal placeholder event
-      completeMarks: true    // Rule: completing a task annotates its synced event
+      completeMarks: true,   // Rule: completing a task annotates its synced event
+      allTasksToEvents: false // Rule: EVERY task with a due date gets a calendar event
     },
     syncLog: [],
     externalEvents: [],      // events living on the simulated Google Calendar (fallback demo mode)
@@ -629,6 +684,10 @@ function seedState(){
       url: '',               // https://<project>.supabase.co  (public)
       anonKey: '',           // anon/public API key (safe in client — RLS protects data)
       hostKey: ''            // YOUR private admin secret — never commit this; lives only in your browser/Drive
+    },
+    gemini: {
+      apiKey: '',                   // from Google AI Studio — free tier, browser-only, never in repo
+      model: 'gemini-2.0-flash'     // change here if Google renames/retires this model
     },
     updatedAt: Date.now(),
     bookView: 'types',
@@ -691,6 +750,8 @@ async function init(){
   if(!S.calMonth) S.calMonth = todayISO().slice(0,7);
   if(!S.google) S.google = {clientId:'', connected:false, lastSynced:null};
   if(!S.supabase) S.supabase = {url:'', anonKey:'', hostKey:''};
+  if(!S.gemini) S.gemini = {apiKey:'', model:'gemini-2.0-flash'};
+  if(S.rules && S.rules.allTasksToEvents===undefined) S.rules.allTasksToEvents = false;
   if(S.supabase.hostKey===undefined) S.supabase.hostKey='';
   if(!S.eventTypes) S.eventTypes = [];
   if(!S.availability) S.availability = {timezone:'Europe/Copenhagen', minNoticeHours:12, dailyLimit:null,
@@ -756,7 +817,11 @@ function fireRules(task, change){
     }
   }
   if(change==='due'){
-    if(live){ gcalPatchEvent(task, { start:{date:task.due}, end:{date:addDays(task.due,1)} }).then(render).catch(e=>console.error(e)); return; }
+    if(live){
+      if(task.gcalEventId){ gcalPatchEvent(task, { start:{date:task.due}, end:{date:addDays(task.due,1)} }).then(render).catch(e=>console.error(e)); }
+      else if(S.rules.allTasksToEvents && task.due){ gcalCreateEvent(task).then(()=>{save();render();}).catch(e=>console.error(e)); }
+      return;
+    }
     const ev = S.externalEvents.find(e => e.taskId===task.id);
     if(ev && task.due){
       ev.date = task.due;
@@ -904,8 +969,10 @@ async function gcalDeleteOrMarkDone(task){
    event. Run this on connect and on every manual "Sync now". */
 async function reconcileCalendar(){
   if(!(S.google.connected && S.google.clientId)) return 0;
-  if(!S.rules.highToEvent) return 0;
-  const missing = S.tasks.filter(t => t.priority==='high' && !t.done && !t.gcalEventId);
+  const missing = S.tasks.filter(t => !t.done && !t.gcalEventId && (
+    (S.rules.highToEvent && t.priority==='high') ||
+    (S.rules.allTasksToEvents && t.due)
+  ));
   for(const t of missing){
     try{ await gcalCreateEvent(t); }catch(e){ console.error('reconcile failed for', t.title, e); }
   }
@@ -988,6 +1055,7 @@ async function driveMergeOnLoad(){
 
 /* ---------- Rendering ---------- */
 function bindStatic(){
+  wireAiPanel();
   document.querySelectorAll('.view-tabs button').forEach(b => {
     b.addEventListener('click', () => { S.view = b.dataset.view; save(); render(); });
   });
@@ -1259,6 +1327,23 @@ function renderSync(){
       <p class="desc" style="margin-top:10px;margin-bottom:0;font-size:.74rem">${sbConfigured() ? 'Configured — public booking pages now read/write shared bookings. Open the Meetings tab to pull incoming bookings and add them to your Google Calendar.' : 'Until configured, bookings save only to the local browser (fine for personal testing, but strangers can double-book).'}</p>
     </div>
 
+    <div class="sync-card cloud-card">
+      <h3>AI Assistant <span class="dir-tag ${S.gemini.apiKey?'oneway':'rules'}">${S.gemini.apiKey?'configured':'not configured'}</span></h3>
+      <p class="desc">Powers the ✦ chat button (bottom-right) — ask it to summarize your day, list this week's priorities, or check upcoming meetings. Uses Google's Gemini API directly from your browser (no backend), with a genuinely free tier. Only your tasks/bookings/focus are sent as context — nothing leaves your browser except that one request to Google.</p>
+      <ol class="setup-steps">
+        <li>Go to <code>aistudio.google.com</code> → <b>Get API key</b> → Create key (free)</li>
+        <li>Paste it below. It's saved only in your browser + your private Drive backup — never in the repo.</li>
+      </ol>
+      <div class="field" style="margin-bottom:12px"><label>Gemini API key</label>
+        <input id="geminiKey" type="password" placeholder="AIza..." value="${esc(S.gemini.apiKey)}">
+      </div>
+      <div class="btn-row">
+        <button class="btn primary" id="geminiSave">Save key</button>
+        <button class="btn ghost" id="geminiTest">Test</button>
+      </div>
+      <p class="desc" style="margin-top:8px;margin-bottom:0;font-size:.72rem">Model: <code>${esc(S.gemini.model)}</code> (edit in Export JSON if Google renames/retires it). Free-tier requests may be used by Google to improve their models — worth knowing, since your task titles are part of the context sent.</p>
+    </div>
+
     <div class="sync-card">
       <h3>Sync to Calendar <span class="dir-tag oneway">one-way feed</span></h3>
       <div class="pipeline">
@@ -1287,6 +1372,10 @@ function renderSync(){
       <div class="rule-item">
         <label class="switch"><input type="checkbox" id="ruleDone" ${S.rules.completeMarks?'checked':''}><span class="track"></span></label>
         <div class="rule-text"><b>Trigger:</b> task marked <code>complete</code><br><b>Action:</b> annotate the linked calendar event as done (data-sync setting)</div>
+      </div>
+      <div class="rule-item">
+        <label class="switch"><input type="checkbox" id="ruleAll" ${S.rules.allTasksToEvents?'checked':''}><span class="track"></span></label>
+        <div class="rule-text"><b>Trigger:</b> any task has a <code>due date</code> (any priority)<br><b>Action:</b> create an all-day calendar event for it — no priority bias. Applies retroactively on the next Sync now / page load.</div>
       </div>
 
       <h3 style="margin-top:16px;font-size:.85rem">Automation log</h3>
@@ -1412,6 +1501,120 @@ async function sbFetchConfig(){
     if(rows && rows[0]) return { eventTypes: rows[0].event_types, availability: rows[0].availability };
   }catch(e){ console.warn('Supabase config fetch failed', e); }
   return null;
+}
+
+/* =====================================================================
+   AI ASSISTANT — a chat panel over your own data, calling Gemini's API
+   directly from the browser (no backend). Free-tier key from Google AI
+   Studio. Context is built fresh from current state on every question —
+   no separate memory system, no server round-trip beyond the one call
+   to Google.
+   ===================================================================== */
+let aiHistory = []; // {role:'user'|'model', text} — in-memory only, resets on reload
+
+function buildAiContext(){
+  const T = todayISO();
+  const soon = addDays(T, 14);
+  const openTasks = S.tasks.filter(t => !t.done)
+    .sort((a,b) => (a.due||'9999').localeCompare(b.due||'9999'))
+    .slice(0, 40)
+    .map(t => {
+      const sub = t.subtasks && t.subtasks.length ? ` [subtasks ${t.subtasks.filter(s=>s.done).length}/${t.subtasks.length}]` : '';
+      return `- "${t.title}"${t.project?` (${t.project})`:''} — due:${t.due||'none'} priority:${t.priority||'none'}${sub}`;
+    }).join('\n') || '(no open tasks)';
+
+  const upcomingBookings = S.bookings.filter(b => b.status==='confirmed' && b.date>=T && b.date<=soon)
+    .sort((a,b)=> a.date.localeCompare(b.date)||a.start.localeCompare(b.start))
+    .map(b => { const et=S.eventTypes.find(x=>x.id===b.eventTypeId); return `- ${b.date} ${b.start}-${b.end}: ${et?et.name:'Meeting'} with ${b.inviteeName}`; })
+    .join('\n') || '(no upcoming bookings)';
+
+  return `Today's date: ${T}
+Weekly focus: ${S.weeklyFocus||'(none set)'}
+
+OPEN TASKS (up to 40, soonest due date first):
+${openTasks}
+
+UPCOMING BOOKINGS (next 14 days):
+${upcomingBookings}`;
+}
+
+async function callGemini(userText){
+  if(!S.gemini.apiKey) throw new Error('NO_KEY');
+  const context = buildAiContext();
+  const systemPreamble = `You are a concise personal assistant inside a task/calendar app called Manzana. Answer using ONLY the data below plus the user's question. Be brief and direct — a short paragraph or a tight bullet list, not a report. If asked for priorities, use the stated priority field and due dates, not your own guess of importance unless priority is unset. If the data doesn't contain something needed to answer, say so plainly rather than inventing it.\n\n${context}`;
+
+  const turns = aiHistory.slice(-8).map(m => ({ role: m.role, parts:[{text:m.text}] }));
+  const body = {
+    system_instruction: { parts:[{text: systemPreamble}] },
+    contents: [...turns, { role:'user', parts:[{text:userText}] }]
+  };
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${S.gemini.model}:generateContent?key=${S.gemini.apiKey}`;
+  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  if(!res.ok){
+    const t = await res.text().catch(()=> '');
+    throw new Error(`HTTP_${res.status}:${t.slice(0,200)}`);
+  }
+  const data = await res.json();
+  const text = data && data.candidates && data.candidates[0] && data.candidates[0].content
+    && data.candidates[0].content.parts && data.candidates[0].content.parts.map(p=>p.text).join('');
+  if(!text) throw new Error('EMPTY_RESPONSE');
+  return text;
+}
+
+function renderAiMessages(){
+  const box = document.getElementById('aiMessages');
+  box.innerHTML = aiHistory.map(m =>
+    `<div class="ai-msg ${m.role==='user'?'user':'bot'}${m.pending?' thinking':''}${m.setupNeeded?' setup-needed':''}">${esc(m.text)}</div>`
+  ).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendAiMessage(text){
+  text = text.trim(); if(!text) return;
+  aiHistory.push({role:'user', text});
+  renderAiMessages();
+
+  if(!S.gemini.apiKey){
+    aiHistory.push({role:'model', text:'No Gemini API key set up yet. Add one free in Sync → AI Assistant, then ask again.', setupNeeded:true});
+    renderAiMessages();
+    return;
+  }
+  aiHistory.push({role:'model', text:'Thinking…', pending:true});
+  renderAiMessages();
+  try{
+    const reply = await callGemini(text);
+    aiHistory.pop(); // remove "Thinking…"
+    aiHistory.push({role:'model', text: reply});
+  }catch(e){
+    aiHistory.pop();
+    const msg = String(e.message||e);
+    let friendly = 'Something went wrong reaching Gemini — see console (F12) for details.';
+    if(msg.includes('HTTP_400')) friendly = 'Gemini rejected the request — check the API key is valid and the model name in Sync is current.';
+    else if(msg.includes('HTTP_403')||msg.includes('HTTP_401')) friendly = 'API key was rejected — re-copy it from Google AI Studio.';
+    else if(msg.includes('HTTP_429')) friendly = 'Free-tier rate limit hit — wait a bit and try again.';
+    aiHistory.push({role:'model', text: friendly, setupNeeded:true});
+    console.error('Gemini call failed', e);
+  }
+  renderAiMessages();
+}
+
+function wireAiPanel(){
+  const fab = document.getElementById('aiFab');
+  const closeBtn = document.getElementById('aiClose');
+  const input = document.getElementById('aiInput');
+  const send = document.getElementById('aiSend');
+  fab.addEventListener('click', () => {
+    document.body.classList.toggle('ai-open');
+    if(document.body.classList.contains('ai-open') && !aiHistory.length){
+      aiHistory.push({role:'model', text:'Hi — ask me about your tasks, priorities, or upcoming bookings.'});
+      renderAiMessages();
+    }
+  });
+  closeBtn.addEventListener('click', () => document.body.classList.remove('ai-open'));
+  const doSend = () => { const v = input.value; input.value=''; sendAiMessage(v); };
+  send.addEventListener('click', doSend);
+  input.addEventListener('keydown', e => { if(e.key==='Enter') doSend(); });
+  document.querySelectorAll('[data-q]').forEach(b => b.addEventListener('click', () => sendAiMessage(b.dataset.q)));
 }
 
 /* =====================================================================
@@ -1690,16 +1893,22 @@ async function maybeSyncMeetings(force){
     }
     // Create missing calendar events for confirmed bookings (needs your Google login)
     if(S.google.connected){
-      let created = 0;
+      let created = 0, failed = 0, lastErr = null;
       for(const b of S.bookings.filter(x => x.status==='confirmed' && !x.gcalEventId)){
         const et = S.eventTypes.find(x=>x.id===b.eventTypeId) || {name:b.eventTypeName||'Meeting', description:''};
         try{
           await gcalCreateTimedEvent(b, et);
           if(sbConfigured()) await sbUpdateBooking(b.id, {gcal_event_id:b.gcalEventId});
           created++;
-        }catch(e){ console.error('calendar create failed for booking', b.id, e); }
+        }catch(e){ failed++; lastErr = e; console.error('calendar create failed for booking', b.id, e); }
       }
       if(created){ save(); toast(`Added ${created} booking${created===1?'':'s'} to your Google Calendar`); }
+      if(failed){
+        const authIssue = lastErr && /401|403|token|auth/i.test(String(lastErr.message||lastErr));
+        toast(authIssue
+          ? `${failed} calendar event${failed===1?'':'s'} FAILED — your Google session likely expired. Disconnect & reconnect Google in the Sync tab, then Refresh again.`
+          : `${failed} calendar event${failed===1?'':'s'} FAILED — see console (F12) for the error.`);
+      }
     } else if(force && S.bookings.some(x=>x.status==='confirmed' && !x.gcalEventId)){
       toast('Bookings pulled, but Google is disconnected — reconnect in Sync to add them to your calendar');
     }
@@ -1757,7 +1966,7 @@ async function renderPublicBooking(slug){
     </div>
     <div class="pub-body" id="pubBody">Loading availability…</div>
     ${sbConfigured() ? '' : `<div style="background:var(--md-bg);color:var(--md);font-size:.78rem;font-weight:600;padding:10px 26px">⚠ Demo mode: no booking backend is configured, so this booking will NOT reach the host. (Host: fill in BUILD_SUPABASE in index.html.)</div>`}
-    <div class="pub-footer-link">Powered by your own My Tasks scheduling page — no third-party service involved.</div>
+    <div class="pub-footer-link">Powered by Manzana — no third-party scheduling service involved.</div>
   </div>`;
   await renderPubStep();
 }
@@ -1971,6 +2180,17 @@ function wireDynamic(){
   if(rh) rh.addEventListener('change', () => { S.rules.highToEvent = rh.checked; log(`Rule “High → calendar event” turned ${rh.checked?'ON':'OFF'}`,'rule'); save(); render(); });
   const rd = document.getElementById('ruleDone');
   if(rd) rd.addEventListener('change', () => { S.rules.completeMarks = rd.checked; log(`Rule “complete → annotate event” turned ${rd.checked?'ON':'OFF'}`,'rule'); save(); render(); });
+  const ra = document.getElementById('ruleAll');
+  if(ra) ra.addEventListener('change', async () => {
+    S.rules.allTasksToEvents = ra.checked;
+    log(`Rule “every due-dated task → calendar event” turned ${ra.checked?'ON':'OFF'}`,'rule');
+    save();
+    if(ra.checked && S.google.connected){
+      const n = await reconcileCalendar();
+      if(n) toast(`Created ${n} calendar event${n===1?'':'s'} for existing tasks`);
+    }
+    render();
+  });
 
   // cloud / google controls
   const ci = document.getElementById('gClientId');
@@ -1979,6 +2199,31 @@ function wireDynamic(){
   if(gc) gc.addEventListener('click', connectGoogle);
   const gd = document.getElementById('btnGoogleDisconnect');
   if(gd) gd.addEventListener('click', disconnectGoogle);
+
+  // AI assistant (Gemini) config
+  const geminiSave = document.getElementById('geminiSave');
+  if(geminiSave) geminiSave.addEventListener('click', () => {
+    S.gemini.apiKey = document.getElementById('geminiKey').value.trim();
+    save(); render(); toast('Gemini key saved');
+  });
+  const geminiTest = document.getElementById('geminiTest');
+  if(geminiTest) geminiTest.addEventListener('click', async () => {
+    const key = document.getElementById('geminiKey').value.trim();
+    if(!key){ toast('Paste a key first'); return; }
+    const prevKey = S.gemini.apiKey;
+    S.gemini.apiKey = key;
+    try{
+      const reply = await callGemini('Reply with just the word OK.');
+      save(); toast(`✓ Gemini works — replied: "${reply.slice(0,60)}"`);
+    }catch(e){
+      S.gemini.apiKey = prevKey;
+      const msg = String(e.message||e);
+      if(msg.includes('HTTP_400')) toast('Rejected — check the key and that the model name is current');
+      else if(msg.includes('HTTP_401')||msg.includes('HTTP_403')) toast('Key rejected — re-copy from Google AI Studio');
+      else toast('Test failed — see console');
+      console.error(e);
+    }
+  });
 
   // supabase booking backend controls
   const sbSave = document.getElementById('sbSave');
@@ -2034,8 +2279,9 @@ function wireDynamic(){
     try{
       const created = await reconcileCalendar();
       await driveSaveState();
+      if(sbConfigured()) await maybeSyncMeetings(true);   // bookings sync too — one button does everything
       render();
-      toast(created ? `Synced — created ${created} missing calendar event${created===1?'':'s'}` : 'Synced to Google Drive');
+      toast(created ? `Synced — created ${created} missing calendar event${created===1?'':'s'}` : 'Synced');
     }catch(e){ console.error(e); toast('Sync failed — see console'); }
   });
 

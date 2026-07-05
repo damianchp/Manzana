@@ -1,7 +1,7 @@
 {
-  "name": "My Tasks",
-  "short_name": "My Tasks",
-  "description": "Personal task manager with lists, board, calendar, subtasks and Google Calendar sync.",
+  "name": "Manzana",
+  "short_name": "Manzana",
+  "description": "Manzana — tasks, calendar, scheduling and Google sync in one app.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
