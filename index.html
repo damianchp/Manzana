@@ -513,7 +513,7 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
   </div>
   <div class="drawer-body">
     <div class="field"><label>Title</label><input id="dTitle" type="text"></div>
-    <div class="field"><label>Project</label><input id="dProject" type="text" placeholder="e.g. Job search"></div>
+    <div class="field"><label>Project</label><input id="dProject" type="text" placeholder="e.g. Work"></div>
     <div class="field"><label>Priority (custom field)</label>
       <select id="dPriority">
         <option value="">— None —</option>
@@ -564,6 +564,12 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
    1. window.storage  (Claude artifact environment)
    2. localStorage    (when this file is opened directly in a browser)
    3. in-memory       (fallback) */
+/* Optional: hard-code your Supabase creds here after deploying so the
+   PUBLIC booking link works in a stranger's fresh browser (they have no
+   saved config). Both values are public/safe — RLS protects the data.
+   Leave blank to configure only via the Sync tab (works for your own use). */
+const BUILD_SUPABASE = { url:'', anonKey:'' };
+
 const KEY = 'asana-demo-state-v1';
 const store = {
   mem: null,
@@ -604,7 +610,7 @@ function seedState(){
   const T = todayISO();
   const introId = uid(), consultId = uid();
   return {
-    weeklyFocus: 'Land one industry interview — everything else supports this.',
+    weeklyFocus: 'Ship the quarterly report — everything else supports this.',
     view: 'list',
     sort: 'none',
     calMonth: T.slice(0,7),
@@ -618,6 +624,11 @@ function seedState(){
       clientId: '',          // OAuth Client ID (public, safe to store) — paste your own in Sync tab
       connected: false,
       lastSynced: null
+    },
+    supabase: {
+      url: '',               // https://<project>.supabase.co  (public)
+      anonKey: '',           // anon/public API key (safe in client — RLS protects data)
+      hostKey: ''            // YOUR private admin secret — never commit this; lives only in your browser/Drive
     },
     updatedAt: Date.now(),
     bookView: 'types',
@@ -651,17 +662,17 @@ function seedState(){
        status:'confirmed', gcalEventId:null, createdAt:T}
     ],
     tasks: [
-      {id:uid(), title:'Follow up on pharma biostatistician application', project:'Job search', priority:'high',   start:null, due:T,            section:'today',    done:false, notes:'Check status; reference the team you interviewed with.',
-       subtasks:[{id:uid(),text:'Re-read job posting for keywords',done:true},{id:uid(),text:'Draft 3-line follow-up email',done:false},{id:uid(),text:'Send before Friday 12:00',done:false}]},
-      {id:uid(), title:'Revise Discussion section — cohort manuscript', project:'Research', priority:'high', start:addDays(T,-2), due:addDays(T,1), section:'today', done:false, notes:'Target journal: TBD.',
+      {id:uid(), title:'Follow up on the vendor proposal', project:'Work', priority:'high',   start:null, due:T,            section:'today',    done:false, notes:'Check status; reference last week\'s call.',
+       subtasks:[{id:uid(),text:'Re-read the proposal details',done:true},{id:uid(),text:'Draft 3-line follow-up email',done:false},{id:uid(),text:'Send before Friday 12:00',done:false}]},
+      {id:uid(), title:'Revise the report discussion section', project:'Work', priority:'high', start:addDays(T,-2), due:addDays(T,1), section:'today', done:false, notes:'Target journal: TBD.',
        subtasks:[{id:uid(),text:'Address reviewer point on imputation',done:false},{id:uid(),text:'Tighten limitations paragraph',done:false}]},
-      {id:uid(), title:'Tailor CV for target role', project:'Job search', priority:'medium', start:null, due:addDays(T,2), section:'upcoming', done:false, notes:''},
-      {id:uid(), title:'Backtest breakout strategy on recent data', project:'Trading', priority:'medium', start:null, due:addDays(T,4), section:'upcoming', done:false, notes:'Static levels only — no lagging indicators.'},
+      {id:uid(), title:'Prepare slides for Thursday demo', project:'Work', priority:'medium', start:null, due:addDays(T,2), section:'upcoming', done:false, notes:''},
+      {id:uid(), title:'Review monthly budget spreadsheet', project:'Personal', priority:'medium', start:null, due:addDays(T,4), section:'upcoming', done:false, notes:''},
       {id:uid(), title:'Handle a personal admin errand', project:'Personal', priority:'high', start:null, due:addDays(T,3), section:'upcoming', done:false, notes:''},
-      {id:uid(), title:'Draft networking event recap post', project:'IDCN', priority:'low', start:null, due:addDays(T,7), section:'later', done:false, notes:''},
-      {id:uid(), title:'Upload analysis code to GitHub once cleared', project:'Research', priority:'low', start:null, due:null, section:'later', done:false, notes:''},
-      {id:uid(), title:'Review LinkedIn profile analytics', project:'Job search', priority:null, start:null, due:null, section:'recent', done:false, notes:''},
-      {id:uid(), title:'Send thank-you note after informational chat', project:'Job search', priority:'medium', start:null, due:addDays(T,-1), section:'today', done:false, notes:''}
+      {id:uid(), title:'Draft event recap post', project:'Community', priority:'low', start:null, due:addDays(T,7), section:'later', done:false, notes:''},
+      {id:uid(), title:'Publish code samples to GitHub', project:'Work', priority:'low', start:null, due:null, section:'later', done:false, notes:''},
+      {id:uid(), title:'Review website analytics', project:'Work', priority:null, start:null, due:null, section:'recent', done:false, notes:''},
+      {id:uid(), title:'Send thank-you note after the workshop', project:'Community', priority:'medium', start:null, due:addDays(T,-1), section:'today', done:false, notes:''}
     ]
   };
 }
@@ -679,6 +690,8 @@ async function init(){
   S = await store.load() || seedState();
   if(!S.calMonth) S.calMonth = todayISO().slice(0,7);
   if(!S.google) S.google = {clientId:'', connected:false, lastSynced:null};
+  if(!S.supabase) S.supabase = {url:'', anonKey:'', hostKey:''};
+  if(S.supabase.hostKey===undefined) S.supabase.hostKey='';
   if(!S.eventTypes) S.eventTypes = [];
   if(!S.availability) S.availability = {timezone:'Europe/Copenhagen', minNoticeHours:12, dailyLimit:null,
     weekly:{sun:{enabled:false,start:'09:00',end:'17:00'},mon:{enabled:true,start:'09:00',end:'17:00'},
@@ -827,6 +840,7 @@ function ensureToken(silent){
 }
 
 async function connectGoogle(){
+  if(location.protocol==='file:'){ toast('Google login cannot work from a local file — open the deployed site (https://…github.io/…) instead'); return; }
   if(!S.google.clientId){ toast('Paste your Google OAuth Client ID first (Sync tab)'); return; }
   try{
     await ensureToken(false);       // user gesture → real consent popup on first run
@@ -941,6 +955,20 @@ function scheduleDriveSave(){
   clearTimeout(driveSaveTimer);
   driveSaveTimer = setTimeout(() => { driveSaveState().then(render).catch(e=>console.error(e)); }, 1500);
 }
+/* Fetch the latest state blob from Drive WITHOUT overwriting local state —
+   used at booking-confirm time to see bookings made on other devices/tabs
+   so two people can't grab the same slot. Returns null if unavailable. */
+async function driveFetchLatest(){
+  try{
+    const file = await driveFindFile();
+    if(!file) return null;
+    const token = await ensureToken(true);
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, { headers:{'Authorization':`Bearer ${token}`} });
+    if(!res.ok) return null;
+    return await res.json();
+  }catch(e){ return null; }
+}
+
 async function driveMergeOnLoad(){
   const file = await driveFindFile();
   if(!file) { await driveSaveState(); return; } // first run — seed Drive with local state
@@ -1206,6 +1234,31 @@ function renderSync(){
       </p>
     </div>
 
+    <div class="sync-card cloud-card">
+      <h3>Booking backend <span class="dir-tag ${sbConfigured()?'oneway':'rules'}">${sbConfigured()?'configured':'not configured'}</span></h3>
+      <p class="desc">Bookings need a <b>shared</b> place to live so strangers booking your public link can see each other's bookings (and you can see theirs). This uses a free Supabase database, called directly over REST — no SDK, no build step. Everything else (tasks, notes, availability) stays in your browser + Drive; only bookings go here.</p>
+      <ol class="setup-steps">
+        <li>Create a free project at <code>supabase.com</code></li>
+        <li>Open <b>SQL Editor</b> → paste the setup SQL from <code>SUPABASE_SETUP.md</code> → <b>change the host_key value</b> to your own passphrase → Run</li>
+        <li>Go to <b>Project Settings → API</b> and copy the <b>Project URL</b> + <b>anon public</b> key below (both safe to expose — the security rules protect the data)</li>
+        <li>Enter the same passphrase as your <b>Host key</b> — this stays private in your browser and is what separates you from public visitors</li>
+      </ol>
+      <div class="field" style="margin-bottom:10px"><label>Supabase Project URL</label>
+        <input id="sbUrl" type="text" placeholder="https://xxxx.supabase.co" value="${esc(S.supabase.url)}">
+      </div>
+      <div class="field" style="margin-bottom:10px"><label>Supabase anon public key</label>
+        <input id="sbKey" type="text" placeholder="eyJhbGciOi..." value="${esc(S.supabase.anonKey)}">
+      </div>
+      <div class="field" style="margin-bottom:12px"><label>Host key (your private admin secret)</label>
+        <input id="sbHostKey" type="password" placeholder="Invent a long random passphrase" value="${esc(S.supabase.hostKey||'')}">
+      </div>
+      <div class="btn-row">
+        <button class="btn primary" id="sbSave">Save backend config</button>
+        <button class="btn ghost" id="sbTest">Test connection</button>
+      </div>
+      <p class="desc" style="margin-top:10px;margin-bottom:0;font-size:.74rem">${sbConfigured() ? 'Configured — public booking pages now read/write shared bookings. Open the Meetings tab to pull incoming bookings and add them to your Google Calendar.' : 'Until configured, bookings save only to the local browser (fine for personal testing, but strangers can double-book).'}</p>
+    </div>
+
     <div class="sync-card">
       <h3>Sync to Calendar <span class="dir-tag oneway">one-way feed</span></h3>
       <div class="pipeline">
@@ -1247,6 +1300,102 @@ function renderSync(){
       Everything is anchored on a single <b class="k">Due Date field</b> per task. The <b>list, board and calendar are just view toggles</b> over the same task objects — dragging a card onto a calendar date writes that one field, and every other surface re-renders from it. <b>Priority is a custom field</b>, not a separate system: sorting (<i>Priority → due date</i>) reads it, calendar chips are colored by it, the ICS feed embeds it in event titles, and the rules engine uses it as a trigger. The external layer splits in two: a <b>read-only ICS feed</b> (deadlines as all-day events, Asana → calendar only) and a <b>rules integration</b> (task triggers create/update real events, with field-level data sync back to the event) — implemented above with a real, client-side OAuth token calling the Calendar API directly, no server involved. <b>Checklists live inside tasks as subtasks</b> — Microsoft To Do-style steps with instant saving and a progress count that surfaces on list rows and board cards, so breakdown work stays attached to the deadline that drives it instead of living in a separate silo. <b>Cross-device sync</b> reuses the identical Google login to write the whole app state as one JSON file into your Drive's app-private storage, so a phone and a laptop converge on whichever copy was saved most recently. For automated hourly time-blocking of High-priority work, Asana itself stops here — that's the layer tools like Reclaim.ai, Motion or Clockwise add on top by reading these same fields.
     </div>
   </div>`;
+}
+
+/* =====================================================================
+   SUPABASE — shared backend for BOOKINGS ONLY. This is the "one place
+   all bookings live" that a static, per-browser app otherwise can't have.
+   Public booking pages read/write here so strangers' bookings are visible
+   to each other and to you. Uses the REST (PostgREST) endpoint directly —
+   no SDK, no build step. The anon key is safe in the client because Row
+   Level Security policies (see setup SQL) restrict what each role can do.
+   Tasks / notes / availability / event types stay local + Drive; only
+   bookings need sharing.
+   ===================================================================== */
+function sbConfigured(){ return !!(S.supabase && S.supabase.url && S.supabase.anonKey); }
+function sbHeaders(){
+  return { 'apikey':S.supabase.anonKey, 'Authorization':`Bearer ${S.supabase.anonKey}`, 'Content-Type':'application/json' };
+}
+/* Host-privileged requests add your secret key header; DB policies verify it.
+   The key is stored only in your browser (+ your private Drive backup) —
+   never in the repo, never sent to visitors. */
+function sbHostHeaders(){
+  const h = sbHeaders();
+  if(S.supabase.hostKey) h['x-host-key'] = S.supabase.hostKey;
+  return h;
+}
+async function sbRequest(method, path, body, extraHeaders){
+  const url = S.supabase.url.replace(/\/$/,'') + '/rest/v1' + path;
+  const res = await fetch(url, { method, headers: Object.assign(sbHeaders(), extraHeaders||{}), body: body?JSON.stringify(body):undefined });
+  if(!res.ok){ const t = await res.text().catch(()=> ''); throw new Error(`Supabase ${method} ${path} → ${res.status} ${t}`); }
+  return res.status===204 ? null : res.json();
+}
+/* Public read: only the columns needed to compute free/busy — NOT invitee
+   PII. The RLS policy also restricts the anon role to these. */
+async function sbBookedSlotsForDate(dateISO){
+  if(!sbConfigured()) return [];
+  try{
+    const rows = await sbRequest('GET', `/bookings_busy?select=start_time,end_time&date=eq.${dateISO}`);
+    return rows.map(r => ({ start: r.start_time.slice(0,5), end: r.end_time.slice(0,5) }));
+  }catch(e){ console.warn('Supabase read failed', e); return []; }
+}
+/* Public insert of a new booking. Returns the created row (with id). */
+async function sbInsertBooking(b, et){
+  const row = {
+    id: b.id, event_type_id: et.id, event_type_name: et.name,
+    date: b.date, start_time: b.start+':00', end_time: b.end+':00',
+    invitee_name: b.inviteeName, invitee_email: b.inviteeEmail,
+    note: b.note||'', status:'confirmed'
+  };
+  const res = await sbRequest('POST', '/bookings', row, {'Prefer':'return=representation'});
+  return res && res[0];
+}
+/* Host read: full booking rows including invitee PII. Works from your
+   browser; the RLS policy can gate this to a shared secret header if you
+   want stricter privacy (see SQL comments). */
+async function sbFetchAllBookings(){
+  if(!sbConfigured()) return null;
+  try{
+    const rows = await sbRequest('GET', '/bookings?select=*&order=date.asc', null, S.supabase.hostKey?{'x-host-key':S.supabase.hostKey}:{});
+    return rows.map(r => ({
+      id:r.id, eventTypeId:r.event_type_id, eventTypeName:r.event_type_name,
+      date:r.date, start:r.start_time.slice(0,5), end:r.end_time.slice(0,5),
+      inviteeName:r.invitee_name, inviteeEmail:r.invitee_email, note:r.note,
+      status:r.status, gcalEventId:r.gcal_event_id||null, createdAt:r.created_at
+    }));
+  }catch(e){ console.warn('Supabase host fetch failed', e); return null; }
+}
+async function sbUpdateBooking(id, patch){
+  if(!sbConfigured()) return;
+  try{ await sbRequest('PATCH', `/bookings?id=eq.${id}`, patch, S.supabase.hostKey?{'x-host-key':S.supabase.hostKey}:{}); }catch(e){ console.warn('Supabase update failed', e); }
+}
+
+/* Publish the host's scheduling config (event types + availability) to a
+   single-row 'schedule_config' table, so a stranger's browser — which has
+   no local state — can load the public booking page. Call this whenever
+   event types or availability change. */
+async function sbPublishConfig(){
+  if(!sbConfigured()) return;
+  const payload = {
+    id: 1,
+    event_types: S.eventTypes,
+    availability: S.availability,
+    updated_at: new Date().toISOString()
+  };
+  try{
+    const hdrs = {'Prefer':'resolution=merge-duplicates'};
+    if(S.supabase.hostKey) hdrs['x-host-key'] = S.supabase.hostKey;
+    await sbRequest('POST', '/schedule_config', payload, hdrs);
+  }catch(e){ console.warn('Supabase config publish failed', e); }
+}
+/* Public read of the host's config (used by the standalone booking page). */
+async function sbFetchConfig(){
+  if(!sbConfigured()) return null;
+  try{
+    const rows = await sbRequest('GET', '/schedule_config?select=*&id=eq.1');
+    if(rows && rows[0]) return { eventTypes: rows[0].event_types, availability: rows[0].availability };
+  }catch(e){ console.warn('Supabase config fetch failed', e); }
+  return null;
 }
 
 /* =====================================================================
@@ -1305,10 +1454,18 @@ async function computeSlotsForDate(eventType, dateISO){
   const isToday = dateISO===todayISO();
   const minNoticeMin = now.getTime() + S.availability.minNoticeHours*3600000;
 
-  const dayBookings = S.bookings.filter(b => b.date===dateISO && b.status==='confirmed');
-  if(S.availability.dailyLimit && dayBookings.length >= S.availability.dailyLimit) return [];
+  // Booked slots come from Supabase (shared across all visitors) when
+  // configured; otherwise fall back to whatever this browser knows locally.
+  let dayBusy;
+  if(sbConfigured()){
+    dayBusy = await sbBookedSlotsForDate(dateISO);
+  } else {
+    dayBusy = S.bookings.filter(b => b.date===dateISO && b.status==='confirmed')
+                        .map(b => ({start:b.start, end:b.end}));
+  }
+  if(S.availability.dailyLimit && dayBusy.length >= S.availability.dailyLimit) return [];
 
-  const busy = dayBookings.map(b => ({start:timeToMin(b.start), end:timeToMin(b.end)}));
+  const busy = dayBusy.map(b => ({start:timeToMin(b.start), end:timeToMin(b.end)}));
   const gcalBusy = await gcalBusyRangesForDate(dateISO);
   const allBusy = busy.concat(gcalBusy);
 
@@ -1334,14 +1491,14 @@ function upsertEventType(data, id){
   } else {
     S.eventTypes.push(Object.assign({id:uid(), slug:slugify(data.name), active:true}, data));
   }
-  save(); render();
+  save(); sbPublishConfig(); render();
 }
 function deleteEventType(id){
   S.eventTypes = S.eventTypes.filter(x=>x.id!==id);
-  save(); render();
+  save(); sbPublishConfig(); render();
 }
 function toggleEventType(id){
-  const et = S.eventTypes.find(x=>x.id===id); et.active = !et.active; save(); render();
+  const et = S.eventTypes.find(x=>x.id===id); et.active = !et.active; save(); sbPublishConfig(); render();
 }
 
 /* ---------- Booking creation / cancellation (host side) ---------- */
@@ -1364,6 +1521,7 @@ function cancelBooking(id){
   if(S.google.connected && b.gcalEventId){
     gcalRequest('DELETE', `/calendars/primary/events/${b.gcalEventId}`).catch(e=>console.error(e));
   }
+  if(sbConfigured()) sbUpdateBooking(id, {status:'cancelled'}); // reopens the slot for other invitees
   save(); render(); toast('Booking cancelled');
 }
 
@@ -1457,15 +1615,17 @@ function renderAvailabilityAdmin(){
 }
 
 function renderMeetingsAdmin(){
+  if(sbConfigured()) maybeSyncMeetings(); // pull shared bookings + create missing calendar events
   const upcoming = S.bookings.filter(b => b.date >= todayISO()).sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start));
   const past = S.bookings.filter(b => b.date < todayISO()).sort((a,b)=>b.date.localeCompare(a.date));
   const row = b => {
     const et = S.eventTypes.find(x=>x.id===b.eventTypeId);
+    const name = et ? et.name : (b.eventTypeName || 'Meeting');
     const d = new Date(b.date+'T00:00');
     return `<div class="mtg-row ${b.status==='cancelled'?'cancelled':''}">
       <div class="mtg-date"><span class="dow">${d.toLocaleDateString(undefined,{weekday:'short'})}</span><span class="dnum">${d.getDate()}</span></div>
       <div class="mtg-info">
-        <div class="mtg-title">${esc(et?et.name:'Meeting')} with ${esc(b.inviteeName)}</div>
+        <div class="mtg-title">${esc(name)} with ${esc(b.inviteeName)}${b.gcalEventId?' <span class="pill" style="background:var(--sync-bg);color:var(--sync);font-size:.62rem">on calendar</span>':''}</div>
         <div class="mtg-sub">${b.start}–${b.end} · ${esc(b.inviteeEmail)}${b.note?' · "'+esc(b.note)+'"':''}</div>
       </div>
       ${b.status==='confirmed' ? `<button class="btn danger" data-cancelbk="${b.id}" style="padding:6px 12px;font-size:.76rem">Cancel</button>` : `<span class="pill" style="background:var(--hi-bg);color:var(--hi)">Cancelled</span>`}
@@ -1477,13 +1637,66 @@ function renderMeetingsAdmin(){
     ${past.map(row).join('') || '<div class="empty-note">Nothing yet.</div>'}`;
 }
 
+/* Host-side meeting sync: pull all bookings from Supabase (so bookings
+   strangers made reach you), merge into local state, and — per your chosen
+   model — create a real Google Calendar event for any confirmed booking
+   that doesn't have one yet, writing the event id back to Supabase so it's
+   not recreated next time. Guarded so it runs at most once per tab-open. */
+let meetingsSyncing = false, meetingsSyncedOnce = false;
+async function maybeSyncMeetings(force){
+  if(meetingsSyncing) return;
+  if(meetingsSyncedOnce && !force) return;
+  meetingsSyncing = true;
+  try{
+    const remote = await sbFetchAllBookings();
+    if(remote){
+      S.bookings = remote;            // Supabase is the source of truth for bookings
+      save();
+    }
+    // Create missing calendar events for confirmed bookings (needs your Google login)
+    if(S.google.connected){
+      let created = 0;
+      for(const b of S.bookings.filter(x => x.status==='confirmed' && !x.gcalEventId)){
+        const et = S.eventTypes.find(x=>x.id===b.eventTypeId) || {name:b.eventTypeName||'Meeting', description:''};
+        try{
+          await gcalCreateTimedEvent(b, et);
+          if(sbConfigured()) await sbUpdateBooking(b.id, {gcal_event_id:b.gcalEventId});
+          created++;
+        }catch(e){ console.error('calendar create failed for booking', b.id, e); }
+      }
+      if(created){ save(); toast(`Added ${created} booking${created===1?'':'s'} to your Google Calendar`); }
+    }
+    meetingsSyncedOnce = true;
+    render();
+  }catch(e){ console.error('meeting sync failed', e); }
+  finally{ meetingsSyncing = false; }
+}
+
 /* ---------- Public booking page (standalone) ---------- */
 let pubState = { et:null, date:null, slots:[], selectedTime:null, step:'date' };
 
 async function renderPublicBooking(slug){
-  const et = S.eventTypes.find(x => x.slug===slug && x.active);
   const root = document.getElementById('publicBookingRoot');
-  if(!et){ root.innerHTML = `<div class="pub-card"><div class="pub-body"><h2 style="font-family:'Sora'">Scheduling page not found</h2><p style="color:var(--ink-soft)">This event type doesn't exist or isn't active.</p></div></div>`; return; }
+  root.innerHTML = `<div class="pub-card"><div class="pub-body"><p style="color:var(--ink-soft)">Loading…</p></div></div>`;
+
+  // A stranger's browser has empty local state. Pull the host's published
+  // config (event types + availability) from Supabase so the page works.
+  // BUILD_SUPABASE is an optional embedded fallback so the deployed public
+  // link carries the backend creds even in a fresh browser.
+  if((!S.supabase.url || !S.supabase.anonKey) && typeof BUILD_SUPABASE!=='undefined' && BUILD_SUPABASE.url){
+    S.supabase = { url:BUILD_SUPABASE.url, anonKey:BUILD_SUPABASE.anonKey };
+  }
+  if(sbConfigured() && (!S.eventTypes || !S.eventTypes.length || !S.eventTypes.some(e=>e.slug===slug))){
+    const cfg = await sbFetchConfig();
+    if(cfg){ S.eventTypes = cfg.eventTypes || S.eventTypes; S.availability = cfg.availability || S.availability; }
+  }
+
+  const et = S.eventTypes.find(x => x.slug===slug && x.active);
+  if(!et){
+    const extra = sbConfigured() ? '.' : ', or the booking backend is not reachable.';
+    root.innerHTML = `<div class="pub-card"><div class="pub-body"><h2 style="font-family:'Sora'">Scheduling page not found</h2><p style="color:var(--ink-soft)">This event type does not exist or is not active${extra}</p></div></div>`;
+    return;
+  }
   if(pubState.et !== et.id){ pubState = { et: et.id, date:null, slots:[], selectedTime:null, step:'date' }; }
 
   const dates = [];
@@ -1589,13 +1802,46 @@ function wirePublic(){
     if(!name || !email){ toast('Name and email are required'); return; }
     const et = S.eventTypes.find(x=>x.id===pubState.et);
     const noteEl = document.getElementById('pfNote');
+
+    confirm.disabled = true; confirm.textContent = 'Checking availability…';
+
+    // Final conflict re-check against the shared source of truth
+    // (Supabase when configured, else local/Drive). This closes the
+    // double-booking window: the slot list may be stale, so re-verify now.
+    const freshSlots = await computeSlotsForDate(et, pubState.date);
+    if(!freshSlots.includes(pubState.selectedTime)){
+      confirm.disabled = false; confirm.textContent = 'Confirm booking';
+      toast('Sorry — that time was just taken. Pick another.');
+      pubState.step = 'date'; pubState.selectedTime = null;
+      renderPubStep();
+      return;
+    }
+
     const b = { id:uid(), eventTypeId:et.id, date:pubState.date, start:pubState.selectedTime,
       end:minToTime(timeToMin(pubState.selectedTime)+et.duration), inviteeName:name, inviteeEmail:email,
       note: noteEl?noteEl.value.trim():'', status:'confirmed', gcalEventId:null, createdAt:todayISO() };
-    S.bookings.push(b);
-    confirm.disabled = true; confirm.textContent = 'Booking…';
-    if(S.google.connected){ try{ await gcalCreateTimedEvent(b, et); }catch(e){ console.error(e); } }
-    save();
+
+    confirm.textContent = 'Booking…';
+
+    if(sbConfigured()){
+      // Shared backend path: write to Supabase so YOU (and every other
+      // visitor) can see it. The invitee's browser doesn't touch your
+      // Google Calendar — you'll sync it from your Meetings tab.
+      try{
+        await sbInsertBooking(b, et);
+      }catch(e){
+        console.error(e);
+        confirm.disabled = false; confirm.textContent = 'Confirm booking';
+        toast('Could not save booking — please try again.');
+        return;
+      }
+    } else {
+      // Local-only fallback (no backend configured).
+      S.bookings.push(b);
+      if(S.google.connected){ try{ await gcalCreateTimedEvent(b, et); }catch(e){ console.error(e); } }
+      save();
+    }
+
     pubState.step = 'confirmed'; pubState.confirmedBooking = b;
     renderPubStep();
   });
@@ -1692,6 +1938,56 @@ function wireDynamic(){
   if(gc) gc.addEventListener('click', connectGoogle);
   const gd = document.getElementById('btnGoogleDisconnect');
   if(gd) gd.addEventListener('click', disconnectGoogle);
+
+  // supabase booking backend controls
+  const sbSave = document.getElementById('sbSave');
+  if(sbSave) sbSave.addEventListener('click', () => {
+    S.supabase.url = document.getElementById('sbUrl').value.trim();
+    S.supabase.anonKey = document.getElementById('sbKey').value.trim();
+    S.supabase.hostKey = document.getElementById('sbHostKey').value.trim();
+    save(); sbPublishConfig(); render(); toast('Booking backend saved');
+  });
+  const sbTest = document.getElementById('sbTest');
+  if(sbTest) sbTest.addEventListener('click', async () => {
+    const url = document.getElementById('sbUrl').value.trim();
+    const key = document.getElementById('sbKey').value.trim();
+    if(!url || !key){ toast('Enter both URL and key first'); return; }
+    if(!/^https:\/\/.+\.supabase\.co\/?$/.test(url)){ toast('URL should look like https://xxxx.supabase.co — copy it from Project Settings → API'); return; }
+    const prev = {url:S.supabase.url, anonKey:S.supabase.anonKey, hostKey:S.supabase.hostKey};
+    S.supabase = {url, anonKey:key, hostKey: document.getElementById('sbHostKey').value.trim()};
+    try{
+      const res = await fetch(url.replace(/\/$/,'')+'/rest/v1/bookings_busy?select=date&limit=1', {headers: sbHeaders()});
+      if(res.ok){
+        // Reached the backend. Now verify the HOST KEY by attempting the
+        // privileged config write (policies reject it with 403 if wrong).
+        const hdrs = Object.assign(sbHeaders(), {'Prefer':'resolution=merge-duplicates'});
+        if(S.supabase.hostKey) hdrs['x-host-key'] = S.supabase.hostKey;
+        const cfgRes = await fetch(url.replace(/\/$/,'')+'/rest/v1/schedule_config', {
+          method:'POST', headers:hdrs,
+          body: JSON.stringify({id:1, event_types:S.eventTypes, availability:S.availability, updated_at:new Date().toISOString()})
+        });
+        if(cfgRes.ok){
+          save(); toast('✓ Backend + host key verified — config published'); render();
+        } else if(cfgRes.status===401||cfgRes.status===403){
+          S.supabase = prev;
+          toast('Backend reachable, but the HOST KEY is wrong — it must match the value in your SQL app_secrets table');
+        } else {
+          S.supabase = prev;
+          toast(`Config publish failed (${cfgRes.status}) — did you run the full setup SQL?`);
+        }
+      } else {
+        S.supabase = prev;
+        if(res.status===404) toast('Reached Supabase, but tables are missing — run the setup SQL in the SQL Editor');
+        else if(res.status===401||res.status===403) toast('Reached Supabase, but the anon key was rejected — re-copy it (Project Settings → API)');
+        else toast(`Supabase responded with error ${res.status} — see console`);
+        console.error('Supabase test failed', res.status, await res.text().catch(()=>''));
+      }
+    }catch(e){
+      S.supabase = prev;
+      console.error(e);
+      toast('Could not reach that URL at all — check the Project URL and your internet connection');
+    }
+  });
   const gs = document.getElementById('btnSyncNow');
   if(gs) gs.addEventListener('click', async () => {
     try{
@@ -1718,16 +2014,16 @@ function wireDynamic(){
   }));
 
   // book tab — availability
-  document.querySelectorAll('[data-avday]').forEach(cb => cb.addEventListener('change', () => { S.availability.weekly[cb.dataset.avday].enabled = cb.checked; save(); render(); }));
-  document.querySelectorAll('[data-avstart]').forEach(i => i.addEventListener('change', () => { S.availability.weekly[i.dataset.avstart].start = i.value; save(); }));
-  document.querySelectorAll('[data-avend]').forEach(i => i.addEventListener('change', () => { S.availability.weekly[i.dataset.avend].end = i.value; save(); }));
+  document.querySelectorAll('[data-avday]').forEach(cb => cb.addEventListener('change', () => { S.availability.weekly[cb.dataset.avday].enabled = cb.checked; save(); sbPublishConfig(); render(); }));
+  document.querySelectorAll('[data-avstart]').forEach(i => i.addEventListener('change', () => { S.availability.weekly[i.dataset.avstart].start = i.value; save(); sbPublishConfig(); }));
+  document.querySelectorAll('[data-avend]').forEach(i => i.addEventListener('change', () => { S.availability.weekly[i.dataset.avend].end = i.value; save(); sbPublishConfig(); }));
   const avSave = document.getElementById('avSave');
   if(avSave) avSave.addEventListener('click', () => {
     S.availability.timezone = document.getElementById('avTz').value.trim() || S.availability.timezone;
     S.availability.minNoticeHours = Number(document.getElementById('avNotice').value)||0;
     const lim = document.getElementById('avLimit').value;
     S.availability.dailyLimit = lim ? Number(lim) : null;
-    save(); render(); toast('Availability rules saved');
+    save(); sbPublishConfig(); render(); toast('Availability rules saved');
   });
   const avBlockBtn = document.getElementById('avBlockBtn');
   if(avBlockBtn) avBlockBtn.addEventListener('click', () => {
@@ -1853,23 +2149,33 @@ function toast(msg){
   toastTimer = setTimeout(()=>el.classList.remove('show'), 2600);
 }
 
-init();
+const initReady = init();   // keep the promise so route() can wait for state
 window.addEventListener('hashchange', route);
-function route(){
+async function route(){
   const hash = location.hash; // '#book/<slug>' → public booking page, no app chrome
   const m = hash.match(/^#book\/(.+)$/);
   document.getElementById('appRoot').style.display = m ? 'none' : '';
   document.getElementById('publicBookingRoot').style.display = m ? 'flex' : 'none';
-  if(m) renderPublicBooking(decodeURIComponent(m[1]));
+  if(m){
+    await initReady;          // S must exist before the booking page renders
+    renderPublicBooking(decodeURIComponent(m[1]));
+  }
 }
 route();
 
-// Register the service worker (installable, offline-capable app shell).
-// Safe no-op if served somewhere that doesn't support it (e.g. file://).
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW registration failed:', err));
   });
+}
+
+// Running from file:// (double-clicking the HTML) breaks Google OAuth
+// (invalid origin) and can confuse backend testing — warn loudly.
+if(location.protocol === 'file:'){
+  const warn = document.createElement('div');
+  warn.style.cssText = 'background:#e8384f;color:#fff;font-size:.85rem;font-weight:600;padding:10px 20px;text-align:center';
+  warn.textContent = '⚠ You are opening this file locally (file://). Google login and booking links only work on the deployed site — open your deployed GitHub Pages URL instead.';
+  document.body.prepend(warn);
 }
 </script>
 </body>
