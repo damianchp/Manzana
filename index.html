@@ -666,7 +666,7 @@ body.ai-open #aiPanel{display:flex}
    PUBLIC booking link works in a stranger's fresh browser (they have no
    saved config). Both values are public/safe — RLS protects the data.
    Leave blank to configure only via the Sync tab (works for your own use). */
-const BUILD_SUPABASE = { url:'', anonKey:'' };
+const BUILD_SUPABASE = { url:'https://ricbcxgtjuotuppizjtn.supabase.co', anonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpY2JjeGd0anVvdHVwcGl6anRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxODY2NDgsImV4cCI6MjA5ODc2MjY0OH0.QD6wUI9FWXOOiiiSdQ967qx8N1xATWYvFLxkrV4HmNU' };
 
 const KEY = 'asana-demo-state-v1';
 const store = {
@@ -1764,6 +1764,7 @@ async function sendAiMessage(text){
     let friendly = 'Something went wrong reaching Gemini — see console (F12) for details.';
     if(msg.includes('HTTP_400')) friendly = 'Gemini rejected the request — check the API key is valid and the model name in Sync is current.';
     else if(msg.includes('HTTP_403')||msg.includes('HTTP_401')) friendly = 'API key was rejected — re-copy it from Google AI Studio.';
+    else if(msg.toLowerCase().includes('prepayment credits')) friendly = 'Google says "prepayment credits are depleted" — a known Gemini API billing-side issue reported by many developers right now, not specific to this app. Check aistudio.google.com/projects for your real billing status; some report it is a sync bug that clears on its own or after adding a small funded balance.';
     else if(msg.includes('HTTP_429')) friendly = 'Quota error (429). If this happened on your FIRST try, the model in Sync → AI Assistant has no free quota — switch it to gemini-2.5-flash-lite. If it happened after several quick questions, wait a minute. Google said: ' + msg.split('HTTP_429:')[1].slice(0,160);
     else if(msg.includes('HTTP_404')) friendly = 'Model not found — the model name in Sync → AI Assistant is outdated; try gemini-2.5-flash-lite.';
     aiHistory.push({role:'model', text: friendly, setupNeeded:true});
@@ -2658,7 +2659,10 @@ async function aiAutofillTask(){
     toast('Suggestions added — priority is pre-selected, click Save changes to keep it');
   }catch(e){
     console.error('AI autofill failed', e);
-    toast('Autofill failed — see console (F12). The model may have replied in a format that could not be parsed.');
+    const msg = String(e.message||e);
+    if(msg.toLowerCase().includes('prepayment credits')) toast('Google says Gemini "prepayment credits are depleted" — a known billing-side issue on Google\u2019s end, not this app. Check aistudio.google.com/projects.');
+    else if(msg.includes('HTTP_429')) toast('Gemini quota error (429) — see the ✦ chat panel for details, or try again shortly.');
+    else toast('Autofill failed — see console (F12). The model may have replied in a format that could not be parsed.');
   }
   btn.disabled = false; btn.textContent = '✦ Suggest priority & subtasks from title';
 }
