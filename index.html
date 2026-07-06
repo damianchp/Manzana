@@ -443,6 +443,39 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
 .cal-chip.booking{background:#f0e9fb;color:#7c4fd1;border:1px solid transparent}
 .cal-chip.booking::before{content:"◐ ";}
 
+/* ---------- Today dashboard ---------- */
+.today-focus{
+  background:linear-gradient(90deg,#1d2733,#2b3a4d);color:#fff;border-radius:14px;
+  padding:16px 20px;margin-bottom:18px;
+}
+.today-focus .label{font-family:'Sora';font-size:.66rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.today-focus .text{font-size:1.02rem;font-weight:600;margin-top:4px}
+.today-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.today-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.today-card h3{font-family:'Sora';font-size:.88rem;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.today-card h3 .count{font-weight:500;color:var(--ink-faint);font-size:.76rem}
+.today-ai-btn{
+  width:100%;background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:.85rem;
+  padding:11px;border-radius:10px;margin-top:4px;
+}
+.today-ai-btn:hover{filter:brightness(0.97)}
+
+/* ---------- Table view ---------- */
+.table-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.table-toolbar select{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:.82rem;background:var(--card)}
+table.data-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+table.data-table th{
+  text-align:left;font-family:'Sora';font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--ink-soft);padding:10px 12px;background:var(--paper);cursor:pointer;user-select:none;white-space:nowrap;
+}
+table.data-table th:hover{color:var(--accent)}
+table.data-table th .arrow{font-size:.7rem;margin-left:3px;color:var(--accent)}
+table.data-table td{padding:10px 12px;font-size:.85rem;border-top:1px solid var(--line);vertical-align:middle}
+table.data-table tr.trow{cursor:pointer}
+table.data-table tr.trow:hover td{background:var(--paper)}
+table.data-table tr.done td{opacity:.5}
+table.data-table tr.done .t-title-cell{text-decoration:line-through}
+
 /* ---------- AI Assistant (Gemini) ---------- */
 #aiFab{
   position:fixed;right:22px;bottom:22px;width:52px;height:52px;border-radius:50%;
@@ -516,7 +549,9 @@ body.ai-open #aiPanel{display:flex}
 
 <div class="toolbar">
   <div class="view-tabs" role="tablist">
-    <button data-view="list" class="active" role="tab">List</button>
+    <button data-view="today" class="active" role="tab">Today</button>
+    <button data-view="list" role="tab">List</button>
+    <button data-view="table" role="tab">Table</button>
     <button data-view="board" role="tab">Board</button>
     <button data-view="calendar" role="tab">Calendar</button>
     <button data-view="book" role="tab">Book</button>
@@ -557,8 +592,17 @@ body.ai-open #aiPanel{display:flex}
         <option value="low">Low</option>
       </select>
     </div>
+    <button class="btn ghost" id="btnAiAutofill" style="width:100%;margin-bottom:4px;font-size:.8rem">✦ Suggest priority &amp; subtasks from title</button>
     <div class="field"><label>Start date</label><input id="dStart" type="date"></div>
     <div class="field"><label>Due date</label><input id="dDue" type="date"></div>
+    <div class="field"><label>Repeat</label>
+      <select id="dRepeat">
+        <option value="">Never</option>
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+    </div>
     <div class="field"><label>Section</label>
       <select id="dSection">
         <option value="recent">Recently assigned</option>
@@ -622,7 +666,7 @@ body.ai-open #aiPanel{display:flex}
    PUBLIC booking link works in a stranger's fresh browser (they have no
    saved config). Both values are public/safe — RLS protects the data.
    Leave blank to configure only via the Sync tab (works for your own use). */
-const BUILD_SUPABASE = { url:'https://ricbcxgtjuotuppizjtn.supabase.co', anonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpY2JjeGd0anVvdHVwcGl6anRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxODY2NDgsImV4cCI6MjA5ODc2MjY0OH0.QD6wUI9FWXOOiiiSdQ967qx8N1xATWYvFLxkrV4HmNU' };
+const BUILD_SUPABASE = { url:'', anonKey:'' };
 
 const KEY = 'asana-demo-state-v1';
 const store = {
@@ -646,6 +690,31 @@ const pad = n => String(n).padStart(2,'0');
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const todayISO = () => iso(new Date());
 const addDays = (base, n) => { const d = new Date(base); d.setDate(d.getDate()+n); return iso(d); };
+const addMonths = (base, n) => { const d = new Date(base); const day = d.getDate(); d.setMonth(d.getMonth()+n); if(d.getDate()<day) d.setDate(0); return iso(d); };
+function nextRepeatDate(dueISO, repeat){
+  if(!dueISO) return null;
+  if(repeat==='daily') return addDays(dueISO, 1);
+  if(repeat==='weekly') return addDays(dueISO, 7);
+  if(repeat==='monthly') return addMonths(dueISO, 1);
+  return null;
+}
+/* Spawn the next occurrence when a repeating task is completed. The
+   completed instance stays completed (a record you did it); a fresh
+   instance is created with the shifted due date, undone, no gcal link
+   of its own yet. */
+function spawnNextRepeat(t){
+  if(!t.repeat || !t.due) return;
+  const nextDue = nextRepeatDate(t.due, t.repeat);
+  if(!nextDue) return;
+  const clone = {
+    id: uid(), title: t.title, project: t.project, priority: t.priority,
+    start: null, due: nextDue, repeat: t.repeat,
+    section: nextDue===todayISO() ? 'today' : 'upcoming',
+    done: false, notes: t.notes,
+    subtasks: (t.subtasks||[]).map(s => ({id:uid(), text:s.text, done:false})) // fresh checklist, unticked
+  };
+  S.tasks.push(clone);
+}
 const fmtDue = s => {
   if(!s) return '';
   const d = new Date(s+'T00:00'); const t = new Date(todayISO()+'T00:00');
@@ -665,7 +734,7 @@ function seedState(){
   const introId = uid(), consultId = uid();
   return {
     weeklyFocus: 'Ship the quarterly report — everything else supports this.',
-    view: 'list',
+    view: 'today',
     sort: 'none',
     calMonth: T.slice(0,7),
     rules: {
@@ -687,11 +756,13 @@ function seedState(){
     },
     gemini: {
       apiKey: '',                   // from Google AI Studio — free tier, browser-only, never in repo
-      model: 'gemini-2.0-flash'     // change here if Google renames/retires this model
+      model: 'gemini-2.5-flash-lite' // current free-tier model; editable in the Sync tab
     },
     updatedAt: Date.now(),
     bookView: 'types',
     calShow: 'both',
+    tableFilterProject: null,
+    tableSort: {col:'due', dir:'asc'},
     eventTypes: [
       {id:introId, name:'Intro call', slug:'intro-call', duration:30, buffer:10, color:'#f25d52',
        description:'A short call to see if we\'re a good fit to work together.', locationType:'video',
@@ -747,10 +818,12 @@ let driveSaveTimer = null;
 
 async function init(){
   S = await store.load() || seedState();
+  startAutoSync();
   if(!S.calMonth) S.calMonth = todayISO().slice(0,7);
   if(!S.google) S.google = {clientId:'', connected:false, lastSynced:null};
   if(!S.supabase) S.supabase = {url:'', anonKey:'', hostKey:''};
-  if(!S.gemini) S.gemini = {apiKey:'', model:'gemini-2.0-flash'};
+  if(!S.gemini) S.gemini = {apiKey:'', model:'gemini-2.5-flash-lite'};
+  if(S.gemini.model==='gemini-2.0-flash') S.gemini.model = 'gemini-2.5-flash-lite'; // old default lost its free quota
   if(S.rules && S.rules.allTasksToEvents===undefined) S.rules.allTasksToEvents = false;
   if(S.supabase.hostKey===undefined) S.supabase.hostKey='';
   if(!S.eventTypes) S.eventTypes = [];
@@ -762,7 +835,9 @@ async function init(){
   if(!S.bookings) S.bookings = [];
   if(!S.bookView) S.bookView = 'types';
   if(!S.calShow) S.calShow = 'both';
-  S.tasks.forEach(t => { if(!Array.isArray(t.subtasks)) t.subtasks = []; });
+  if(S.tableFilterProject===undefined) S.tableFilterProject = null;
+  if(!S.tableSort) S.tableSort = {col:'due', dir:'asc'};
+  S.tasks.forEach(t => { if(!Array.isArray(t.subtasks)) t.subtasks = []; if(t.repeat===undefined) t.repeat = null; });
   bindStatic();
   render();
   if(S.google.connected && S.google.clientId){
@@ -1072,6 +1147,7 @@ function bindStatic(){
   document.getElementById('drawerScrim').addEventListener('click', closeDrawer);
   document.getElementById('dSave').addEventListener('click', saveDrawer);
   document.getElementById('subNewBtn').addEventListener('click', addSubtask);
+  document.getElementById('btnAiAutofill').addEventListener('click', aiAutofillTask);
   document.getElementById('subNewInput').addEventListener('keydown', e => { if(e.key==='Enter') addSubtask(); });
   document.getElementById('dDelete').addEventListener('click', () => {
     S.tasks = S.tasks.filter(t => t.id!==editingId);
@@ -1119,7 +1195,9 @@ function render(){
   document.querySelectorAll('.view-tabs button').forEach(b => b.classList.toggle('active', b.dataset.view===S.view));
   document.getElementById('sortWrap').style.visibility = (S.view==='list') ? 'visible':'hidden';
   const m = document.getElementById('main');
-  if(S.view==='list') m.innerHTML = renderList();
+  if(S.view==='today') m.innerHTML = renderToday();
+  else if(S.view==='list') m.innerHTML = renderList();
+  else if(S.view==='table') m.innerHTML = renderTable();
   else if(S.view==='board') m.innerHTML = renderBoard();
   else if(S.view==='calendar'){ m.innerHTML = renderCalendar(); maybePullRealEvents(); }
   else if(S.view==='book') m.innerHTML = renderBook();
@@ -1147,6 +1225,9 @@ function subPill(t){
   const done = st.filter(s=>s.done).length;
   return `<span class="pill progress ${done===st.length?'complete':''}" title="Subtasks completed">${done}/${st.length}</span>`;
 }
+const REPEAT_ICON = {daily:'↻ Daily', weekly:'↻ Weekly', monthly:'↻ Monthly'};
+function repeatPill(t){ return t.repeat ? `<span class="pill" style="background:#eef2fc;color:var(--lo)" title="Repeats — completing it creates the next occurrence">${REPEAT_ICON[t.repeat]}</span>` : ''; }
+
 function taskRow(t){
   const dueCls = !t.due ? '' : (t.due < todayISO() && !t.done ? 'overdue' : (t.due===todayISO() ? 'today':''));
   const synced = t.due && !t.done;
@@ -1157,6 +1238,7 @@ function taskRow(t){
     <span class="t-title">${esc(t.title)}</span>
     ${t.project?`<span class="pill project">${esc(t.project)}</span>`:''}
     ${subPill(t)}
+    ${repeatPill(t)}
     ${t.priority?`<span class="pill p-${t.priority}">${PRI_LABEL[t.priority]}</span>`:''}
     ${synced?`<span class="pill synced" title="Has a due date → appears in calendar views and the ICS feed">⇄ feed</span>`:''}
     <span class="t-due ${dueCls}">${fmtDue(t.due)}</span>
@@ -1168,6 +1250,94 @@ function sortedTasks(){
   if(S.sort==='priority') ts.sort((a,b) => (PRI_ORDER[a.priority]-PRI_ORDER[b.priority]) || ((a.due||'9999')<(b.due||'9999')?-1:1));
   else if(S.sort==='due') ts.sort((a,b) => (a.due||'9999') < (b.due||'9999') ? -1 : 1);
   return ts;
+}
+
+/* ---------- Today dashboard (landing view) ---------- */
+function renderToday(){
+  const T = todayISO();
+  const overdue = S.tasks.filter(t => !t.done && t.due && t.due < T).sort((a,b)=>a.due.localeCompare(b.due));
+  const dueToday = S.tasks.filter(t => !t.done && t.due === T);
+  const todaysBookings = S.bookings.filter(b => b.status==='confirmed' && b.date===T).sort((a,b)=>a.start.localeCompare(b.start));
+
+  const bookingRow = b => {
+    const et = S.eventTypes.find(x=>x.id===b.eventTypeId);
+    return `<div class="task-row" style="cursor:default">
+      <span class="pill" style="background:#f0e9fb;color:#7c4fd1">${b.start}</span>
+      <span class="t-title">${esc(et?et.name:'Meeting')} with ${esc(b.inviteeName)}</span>
+    </div>`;
+  };
+
+  return `
+    <div class="today-focus">
+      <div class="label">Weekly focus</div>
+      <div class="text">${esc(S.weeklyFocus||'Nothing set — add one from the banner above.')}</div>
+    </div>
+    <button class="today-ai-btn" id="btnTodayAi">✦ Get an AI summary of today</button>
+    <div style="height:16px"></div>
+    <div class="today-grid">
+      <div class="today-card">
+        <h3>⚠ Overdue <span class="count">${overdue.length}</span></h3>
+        ${overdue.map(taskRow).join('') || '<div class="empty-note">Nothing overdue. 🎉</div>'}
+      </div>
+      <div class="today-card">
+        <h3>Due today <span class="count">${dueToday.length}</span></h3>
+        ${dueToday.map(taskRow).join('') || '<div class="empty-note">No tasks due today.</div>'}
+      </div>
+      <div class="today-card">
+        <h3>Today's bookings <span class="count">${todaysBookings.length}</span></h3>
+        ${todaysBookings.map(bookingRow).join('') || '<div class="empty-note">No bookings today.</div>'}
+      </div>
+    </div>`;
+}
+
+/* ---------- Table view (sortable/filterable, Notion-table-lite) ---------- */
+function renderTable(){
+  const projects = [...new Set(S.tasks.map(t=>t.project).filter(Boolean))].sort();
+  const filter = S.tableFilterProject;
+  let rows = S.tasks.filter(t => !filter || t.project===filter);
+
+  const sort = S.tableSort || {col:'due', dir:'asc'};
+  const cmp = {
+    title: (a,b) => a.title.localeCompare(b.title),
+    project: (a,b) => (a.project||'').localeCompare(b.project||''),
+    priority: (a,b) => PRI_ORDER[a.priority]-PRI_ORDER[b.priority],
+    due: (a,b) => (a.due||'9999').localeCompare(b.due||'9999')
+  }[sort.col];
+  rows = [...rows].sort((a,b) => sort.dir==='asc' ? cmp(a,b) : -cmp(a,b));
+
+  const arrow = col => sort.col===col ? `<span class="arrow">${sort.dir==='asc'?'▲':'▼'}</span>` : '';
+  const th = (col,label) => `<th data-sortcol="${col}">${label}${arrow(col)}</th>`;
+
+  return `
+    <div class="table-toolbar">
+      <select id="tableProjectFilter">
+        <option value="">All projects</option>
+        ${projects.map(p=>`<option value="${esc(p)}" ${filter===p?'selected':''}>${esc(p)}</option>`).join('')}
+      </select>
+      <span style="font-size:.78rem;color:var(--ink-faint)">${rows.length} task${rows.length===1?'':'s'} · click a header to sort</span>
+    </div>
+    <table class="data-table">
+      <thead><tr>
+        <th></th>
+        ${th('title','Task')}${th('project','Project')}${th('priority','Priority')}${th('due','Due')}
+        <th>Subtasks</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(t => {
+          const dueCls = !t.due ? '' : (t.due < todayISO() && !t.done ? 'overdue' : (t.due===todayISO() ? 'today':''));
+          return `<tr class="trow ${t.done?'done':''}" data-id="${t.id}">
+            <td><button class="checkbox ${t.done?'checked':''}" data-check="${t.id}" aria-label="Complete task" style="width:17px;height:17px">
+              <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.5 4.8 9 10 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button></td>
+            <td class="t-title-cell">${esc(t.title)}${repeatPill(t)}</td>
+            <td>${t.project?esc(t.project):'<span style="color:var(--ink-faint)">—</span>'}</td>
+            <td>${t.priority?`<span class="pill p-${t.priority}">${PRI_LABEL[t.priority]}</span>`:''}</td>
+            <td class="t-due ${dueCls}">${fmtDue(t.due)||'—'}</td>
+            <td>${subPill(t)||''}</td>
+          </tr>`;
+        }).join('') || `<tr><td colspan="6" class="empty-note">No tasks match this filter.</td></tr>`}
+      </tbody>
+    </table>`;
 }
 
 function renderList(){
@@ -1334,14 +1504,17 @@ function renderSync(){
         <li>Go to <code>aistudio.google.com</code> → <b>Get API key</b> → Create key (free)</li>
         <li>Paste it below. It's saved only in your browser + your private Drive backup — never in the repo.</li>
       </ol>
-      <div class="field" style="margin-bottom:12px"><label>Gemini API key</label>
+      <div class="field" style="margin-bottom:10px"><label>Gemini API key</label>
         <input id="geminiKey" type="password" placeholder="AIza..." value="${esc(S.gemini.apiKey)}">
+      </div>
+      <div class="field" style="margin-bottom:12px"><label>Model</label>
+        <input id="geminiModel" type="text" value="${esc(S.gemini.model)}" placeholder="gemini-2.5-flash-lite">
       </div>
       <div class="btn-row">
         <button class="btn primary" id="geminiSave">Save key</button>
         <button class="btn ghost" id="geminiTest">Test</button>
       </div>
-      <p class="desc" style="margin-top:8px;margin-bottom:0;font-size:.72rem">Model: <code>${esc(S.gemini.model)}</code> (edit in Export JSON if Google renames/retires it). Free-tier requests may be used by Google to improve their models — worth knowing, since your task titles are part of the context sent.</p>
+      <p class="desc" style="margin-top:8px;margin-bottom:0;font-size:.72rem">If you get quota (429) errors on the first try, the model likely has no free-tier quota — try <code>gemini-2.5-flash-lite</code> (highest free limits) or check your quota at aistudio.google.com. Free-tier requests may be used by Google to improve their models — your task titles are part of the context sent.</p>
     </div>
 
     <div class="sync-card">
@@ -1591,7 +1764,8 @@ async function sendAiMessage(text){
     let friendly = 'Something went wrong reaching Gemini — see console (F12) for details.';
     if(msg.includes('HTTP_400')) friendly = 'Gemini rejected the request — check the API key is valid and the model name in Sync is current.';
     else if(msg.includes('HTTP_403')||msg.includes('HTTP_401')) friendly = 'API key was rejected — re-copy it from Google AI Studio.';
-    else if(msg.includes('HTTP_429')) friendly = 'Free-tier rate limit hit — wait a bit and try again.';
+    else if(msg.includes('HTTP_429')) friendly = 'Quota error (429). If this happened on your FIRST try, the model in Sync → AI Assistant has no free quota — switch it to gemini-2.5-flash-lite. If it happened after several quick questions, wait a minute. Google said: ' + msg.split('HTTP_429:')[1].slice(0,160);
+    else if(msg.includes('HTTP_404')) friendly = 'Model not found — the model name in Sync → AI Assistant is outdated; try gemini-2.5-flash-lite.';
     aiHistory.push({role:'model', text: friendly, setupNeeded:true});
     console.error('Gemini call failed', e);
   }
@@ -1870,6 +2044,28 @@ function renderMeetingsAdmin(){
    model — create a real Google Calendar event for any confirmed booking
    that doesn't have one yet, writing the event id back to Supabase so it's
    not recreated next time. Guarded so it runs at most once per tab-open. */
+/* ---------- Auto-sync scheduler (in-app layer) ----------
+   Syncs bookings on every app open, and at fixed local times (07/12/15)
+   while a tab or the installed PWA is open. A browser cannot run code
+   while fully closed — the GitHub Actions workflow covers that gap. */
+const AUTO_SYNC_HOURS = [7, 12, 15];
+let lastAutoSyncSlot = null;
+function startAutoSync(){
+  // on open: run once, shortly after load so Google/Supabase are ready
+  setTimeout(() => { if(sbConfigured()) maybeSyncMeetings(true); }, 4000);
+  // while open: check each minute whether we've crossed a scheduled hour
+  setInterval(() => {
+    const now = new Date();
+    if(AUTO_SYNC_HOURS.includes(now.getHours()) && now.getMinutes()===0){
+      const slot = `${now.toDateString()}-${now.getHours()}`;
+      if(slot!==lastAutoSyncSlot && sbConfigured()){
+        lastAutoSyncSlot = slot;
+        maybeSyncMeetings(true);
+      }
+    }
+  }, 60000);
+}
+
 let meetingsSyncing = false, meetingsSyncedOnce = false;
 async function maybeSyncMeetings(force){
   if(meetingsSyncing) return;
@@ -2104,11 +2300,33 @@ function wireDynamic(){
     r.addEventListener('click', e => { if(!e.target.closest('[data-check]')) openDrawer(r.dataset.id); });
     r.addEventListener('keydown', e => { if(e.key==='Enter') openDrawer(r.dataset.id); });
   });
+
+  // table view
+  document.querySelectorAll('tr.trow').forEach(r => {
+    r.addEventListener('click', e => { if(!e.target.closest('[data-check]')) openDrawer(r.dataset.id); });
+  });
+  document.querySelectorAll('[data-sortcol]').forEach(th => th.addEventListener('click', () => {
+    const col = th.dataset.sortcol;
+    if(S.tableSort.col===col) S.tableSort.dir = S.tableSort.dir==='asc' ? 'desc' : 'asc';
+    else S.tableSort = {col, dir:'asc'};
+    save(); render();
+  }));
+  const tpf = document.getElementById('tableProjectFilter');
+  if(tpf) tpf.addEventListener('change', () => { S.tableFilterProject = tpf.value||null; save(); render(); });
+
+  // today dashboard
+  const btnTodayAi = document.getElementById('btnTodayAi');
+  if(btnTodayAi) btnTodayAi.addEventListener('click', () => {
+    document.body.classList.add('ai-open');
+    if(!aiHistory.length){ aiHistory.push({role:'model', text:'Hi — ask me about your tasks, priorities, or upcoming bookings.'}); }
+    sendAiMessage('Summarize my day.');
+  });
+
   document.querySelectorAll('[data-check]').forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
     const t = S.tasks.find(x=>x.id===b.dataset.check);
     t.done = !t.done;
-    if(t.done) fireRules(t,'completed');
+    if(t.done){ fireRules(t,'completed'); spawnNextRepeat(t); }
     save(); render();
   }));
 
@@ -2204,7 +2422,8 @@ function wireDynamic(){
   const geminiSave = document.getElementById('geminiSave');
   if(geminiSave) geminiSave.addEventListener('click', () => {
     S.gemini.apiKey = document.getElementById('geminiKey').value.trim();
-    save(); render(); toast('Gemini key saved');
+    S.gemini.model = document.getElementById('geminiModel').value.trim() || 'gemini-2.5-flash-lite';
+    save(); render(); toast('Gemini settings saved');
   });
   const geminiTest = document.getElementById('geminiTest');
   if(geminiTest) geminiTest.addEventListener('click', async () => {
@@ -2212,6 +2431,7 @@ function wireDynamic(){
     if(!key){ toast('Paste a key first'); return; }
     const prevKey = S.gemini.apiKey;
     S.gemini.apiKey = key;
+    S.gemini.model = document.getElementById('geminiModel').value.trim() || S.gemini.model;
     try{
       const reply = await callGemini('Reply with just the word OK.');
       save(); toast(`✓ Gemini works — replied: "${reply.slice(0,60)}"`);
@@ -2364,6 +2584,7 @@ function openDrawer(id){
   document.getElementById('dPriority').value = t.priority||'';
   document.getElementById('dStart').value = t.start||'';
   document.getElementById('dDue').value = t.due||'';
+  document.getElementById('dRepeat').value = t.repeat||'';
   document.getElementById('dSection').value = t.section;
   document.getElementById('dNotes').value = t.notes||'';
   renderSubtasks(t);
@@ -2408,11 +2629,46 @@ function addSubtask(){
   inp.value=''; inp.focus();
   save(); renderSubtasks(t); refreshBackground();
 }
+
+/* AI autofill: suggests a priority + a short subtask checklist from just
+   the title (and project, if set). Priority is only pre-selected in the
+   dropdown — it still requires "Save changes" like any other field.
+   Subtasks are added immediately (they always save instantly). */
+async function aiAutofillTask(){
+  const t = S.tasks.find(x=>x.id===editingId); if(!t) return;
+  if(!S.gemini.apiKey){ toast('Add a free Gemini key in Sync → AI Assistant first'); return; }
+  const btn = document.getElementById('btnAiAutofill');
+  const title = document.getElementById('dTitle').value.trim();
+  if(!title){ toast('Add a title first'); return; }
+  const project = document.getElementById('dProject').value.trim();
+
+  btn.disabled = true; btn.textContent = 'Thinking…';
+  try{
+    const prompt = `Task title: "${title}"${project?` (project: ${project})`:''}\n\nSuggest: 1) a priority of exactly "high", "medium", or "low" based on how the title reads (urgent/deadline language = high; routine/no urgency = low), 2) a short checklist of 2-4 concrete subtasks to complete it.\n\nRespond with ONLY raw JSON, no markdown fences, no explanation, in exactly this shape:\n{"priority":"high|medium|low","subtasks":["...","..."]}`;
+    const raw = await callGemini(prompt);
+    const cleaned = raw.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(cleaned);
+    if(parsed.priority && ['high','medium','low'].includes(parsed.priority)){
+      document.getElementById('dPriority').value = parsed.priority;
+    }
+    if(Array.isArray(parsed.subtasks) && parsed.subtasks.length){
+      (t.subtasks || (t.subtasks=[])).push(...parsed.subtasks.slice(0,5).map(text => ({id:uid(), text:String(text), done:false})));
+      save(); renderSubtasks(t); refreshBackground();
+    }
+    toast('Suggestions added — priority is pre-selected, click Save changes to keep it');
+  }catch(e){
+    console.error('AI autofill failed', e);
+    toast('Autofill failed — see console (F12). The model may have replied in a format that could not be parsed.');
+  }
+  btn.disabled = false; btn.textContent = '✦ Suggest priority & subtasks from title';
+}
 /* Re-render the main view behind the drawer (progress pills) without
    touching the drawer itself. */
 function refreshBackground(){
   const m = document.getElementById('main');
-  if(S.view==='list') m.innerHTML = renderList();
+  if(S.view==='today') m.innerHTML = renderToday();
+  else if(S.view==='list') m.innerHTML = renderList();
+  else if(S.view==='table') m.innerHTML = renderTable();
   else if(S.view==='board') m.innerHTML = renderBoard();
   else if(S.view==='calendar') m.innerHTML = renderCalendar();
   else m.innerHTML = renderSync();
@@ -2427,6 +2683,7 @@ function saveDrawer(){
   t.priority = document.getElementById('dPriority').value||null;
   t.start = document.getElementById('dStart').value||null;
   t.due = document.getElementById('dDue').value||null;
+  t.repeat = document.getElementById('dRepeat').value||null;
   t.section = document.getElementById('dSection').value;
   t.notes = document.getElementById('dNotes').value;
   if(t.priority!==oldPri && t.priority==='high') fireRules(t,'priority');
