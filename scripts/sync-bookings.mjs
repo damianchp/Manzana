@@ -26,7 +26,7 @@ function need(name, v){ if(!v){ console.error(`Missing secret: ${name}`); proces
 need('SUPABASE_URL', SUPABASE_URL);
 need('SUPABASE_ANON_KEY', SUPABASE_ANON_KEY);
 need('SUPABASE_HOST_KEY', SUPABASE_HOST_KEY);
-need('GOOGLE_SA_KEY_JSON', GOOGLE_SA_KEY_JSON);
+#need('GOOGLE_SA_KEY_JSON', GOOGLE_SA_KEY_JSON);
 need('GOOGLE_CALENDAR_ID', GOOGLE_CALENDAR_ID);
 
 const sb = (path, opts={}) => fetch(SUPABASE_URL.replace(/\/$/,'') + '/rest/v1' + path, {
