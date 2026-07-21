@@ -519,6 +519,55 @@ body.ai-open #aiPanel{display:flex}
 .setup-steps li{margin-bottom:2px}
 .setup-steps code{font-family:'JetBrains Mono',monospace;font-size:.72rem;background:var(--paper);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
 
+/* ---------- Roadmap view (topic timeline / landing tab) ---------- */
+.topic-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.roadmap-wrap{display:flex;flex-direction:column;gap:14px}
+.roadmap-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rm-range-tabs{display:flex;background:#eceff3;border-radius:99px;padding:3px}
+.rm-range-tabs button{padding:7px 14px;border-radius:99px;font-size:.82rem;font-weight:600;color:var(--ink-soft);transition:all .15s}
+.rm-range-tabs button.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.roadmap-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.roadmap-header{display:flex}
+.rm-label-head{width:190px;flex-shrink:0;border-bottom:1px solid var(--line)}
+.rm-months-head{flex:1;display:flex;border-bottom:1px solid var(--line)}
+.rm-months-head .rm-month-cell{flex:1;text-align:center;font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint);padding:9px 2px;border-left:1px solid var(--line)}
+.rm-months-head .rm-month-cell:first-child{border-left:none}
+.rm-months-head .rm-month-cell.rm-current{color:var(--accent)}
+.roadmap-body{max-height:540px;overflow-y:auto}
+.roadmap-row{display:flex;align-items:center;border-bottom:1px solid var(--line)}
+.roadmap-row:last-child{border-bottom:none}
+.rm-label{width:190px;flex-shrink:0;padding:11px 12px;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rm-label .count{font-weight:500;font-size:.7rem;color:var(--ink-faint);white-space:nowrap}
+.rm-track{flex:1;display:flex;position:relative;height:42px}
+.rm-track .rm-month-cell{flex:1;border-left:1px solid var(--line)}
+.rm-track .rm-month-cell:first-child{border-left:none}
+.rm-track .rm-month-cell.rm-current{background:#fbf3f2}
+.rm-band{position:absolute;top:50%;transform:translateY(-50%);height:12px;border-radius:99px;border:1.4px solid transparent;min-width:12px}
+.rm-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;border:2px solid var(--card);cursor:pointer;box-shadow:0 0 0 1px rgba(29,39,51,.08)}
+.rm-marker.rm-p-high{background:var(--hi)}
+.rm-marker.rm-p-medium{background:var(--md)}
+.rm-marker.rm-p-low{background:var(--lo)}
+.rm-marker.rm-p-none{background:var(--ink-faint)}
+.rm-marker.rm-done{background:var(--sync);opacity:.5}
+.rm-overflow-left,.rm-overflow-right{position:absolute;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--ink-faint)}
+.rm-overflow-left{left:2px}
+.rm-overflow-right{right:2px}
+.rm-cal-track{cursor:crosshair;user-select:none}
+.rm-cal-event{
+  position:absolute;height:20px;border-radius:6px;background:#fff;border:1.4px solid var(--gcal);color:var(--gcal);
+  font-size:.7rem;font-weight:600;text-align:left;padding:0 8px;line-height:18px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;
+}
+.rm-cal-event:hover{background:#e8f0fe}
+.rm-cal-draw-preview{
+  position:absolute;top:7px;height:20px;border-radius:6px;background:var(--accent-soft);
+  border:1.4px dashed var(--accent);pointer-events:none;
+}
+
+/* ---------- Shared list (family to-do) ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}}
+
 /* ---------- Toast ---------- */
 #toast{
   position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);z-index:80;
@@ -549,8 +598,10 @@ body.ai-open #aiPanel{display:flex}
 
 <div class="toolbar">
   <div class="view-tabs" role="tablist">
+    <button data-view="roadmap" role="tab">Roadmap</button>
     <button data-view="today" class="active" role="tab">Today</button>
     <button data-view="list" role="tab">List</button>
+    <button data-view="shared" role="tab">Shared</button>
     <button data-view="table" role="tab">Table</button>
     <button data-view="board" role="tab">Board</button>
     <button data-view="calendar" role="tab">Calendar</button>
@@ -728,13 +779,52 @@ const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;',
 const PRI_ORDER = {high:0, medium:1, low:2, '':3, null:3, undefined:3};
 const PRI_LABEL = {high:'High', medium:'Medium', low:'Low'};
 
+/* ---------- Topic color + month/date math (shared by Roadmap + Shared tabs) ----------
+   "Topic" is just the existing free-text project field, reused as the
+   grouping/coloring key so a project reads the same color everywhere. */
+const TOPIC_PALETTE = ['#f25d52','#5a7dde','#12a594','#e08c00','#7c4fd1','#e8384f','#2f9e44','#0891b2','#c2410c','#c026d3'];
+function topicColor(name){
+  const key = (name||'General').trim().toLowerCase();
+  let h = 0;
+  for(let i=0;i<key.length;i++) h = (h*31 + key.charCodeAt(i)) >>> 0;
+  return TOPIC_PALETTE[h % TOPIC_PALETTE.length];
+}
+function monthAdd(ym, n){ const [y,m] = ym.split('-').map(Number); const d = new Date(y, m-1+n, 1); return `${d.getFullYear()}-${pad(d.getMonth()+1)}`; }
+function monthLabel(ym){ const [y,m] = ym.split('-').map(Number); return new Date(y,m-1,1).toLocaleDateString(undefined,{month:'short',year:'numeric'}); }
+function daysInMonth(ym){ const [y,m] = ym.split('-').map(Number); return new Date(y,m,0).getDate(); }
+function monthIndexDiff(fromYM, toYM){ const [y1,m1] = fromYM.split('-').map(Number); const [y2,m2] = toYM.split('-').map(Number); return (y2-y1)*12+(m2-m1); }
+/* Position a date as a fraction of the visible month range. Dates outside
+   the range clamp to the near edge and are flagged so the caller can show
+   a "continues beyond view" indicator instead of silently hiding them. */
+function datePosInRange(dateISO, startYM, monthsCount){
+  const ym = dateISO.slice(0,7);
+  const day = Number(dateISO.slice(8,10));
+  const dim = daysInMonth(ym);
+  let idx = monthIndexDiff(startYM, ym) + (day-1)/dim;
+  let overflow = null;
+  if(idx < 0){ idx = 0; overflow = 'left'; }
+  if(idx > monthsCount){ idx = monthsCount - 0.015; overflow = 'right'; }
+  return { pct: idx/monthsCount*100, overflow };
+}
+/* Inverse of datePosInRange: a horizontal % position on the timeline → a
+   calendar date. Powers drag-to-create on the Roadmap's Calendar lane. */
+function dateAtPos(pct, startYM, monthsCount){
+  const idx = Math.max(0, Math.min(monthsCount - 0.0001, pct/100*monthsCount));
+  const monthIndex = Math.floor(idx);
+  const ym = monthAdd(startYM, monthIndex);
+  const dim = daysInMonth(ym);
+  const frac = idx - monthIndex;
+  const day = Math.max(1, Math.min(dim, Math.round(frac*dim) + 1));
+  return `${ym}-${pad(day)}`;
+}
+
 /* ---------- Seed data (embedded JSON) ---------- */
 function seedState(){
   const T = todayISO();
   const introId = uid(), consultId = uid();
   return {
     weeklyFocus: 'Ship the quarterly report — everything else supports this.',
-    view: 'today',
+    view: 'roadmap',
     sort: 'none',
     calMonth: T.slice(0,7),
     rules: {
@@ -763,6 +853,10 @@ function seedState(){
     calShow: 'both',
     tableFilterProject: null,
     tableSort: {col:'due', dir:'asc'},
+    roadmap: { months: 6, startMonth: T.slice(0,7) },   // topic timeline range + scroll position
+    sharedTasks: [],   // the family/shared to-do list — lives in Supabase, this is just the local cache
+    myName: '',        // local-only display name, tags what you add/complete on the Shared tab
+    familyKey: '',      // local-only passphrase that unlocks editing on the Shared tab
     eventTypes: [
       {id:introId, name:'Intro call', slug:'intro-call', duration:30, buffer:10, color:'#f25d52',
        description:'A short call to see if we\'re a good fit to work together.', locationType:'video',
@@ -837,9 +931,24 @@ async function init(){
   if(!S.calShow) S.calShow = 'both';
   if(S.tableFilterProject===undefined) S.tableFilterProject = null;
   if(!S.tableSort) S.tableSort = {col:'due', dir:'asc'};
+  if(!S.roadmap) S.roadmap = { months:6, startMonth: todayISO().slice(0,7) };
+  if(!S.sharedTasks) S.sharedTasks = [];
+  if(S.myName===undefined) S.myName = '';
+  if(S.familyKey===undefined) S.familyKey = '';
+  // A fresh browser (e.g. your wife's phone, first time) has no Supabase
+  // config of its own. Fall back to the public creds baked into this file
+  // (BUILD_SUPABASE) so the Shared tab and public booking page work without
+  // any setup on that device — same idea already used for booking links.
+  if((!S.supabase.url || !S.supabase.anonKey) && typeof BUILD_SUPABASE!=='undefined' && BUILD_SUPABASE.url){
+    S.supabase.url = S.supabase.url || BUILD_SUPABASE.url;
+    S.supabase.anonKey = S.supabase.anonKey || BUILD_SUPABASE.anonKey;
+  }
   S.tasks.forEach(t => { if(!Array.isArray(t.subtasks)) t.subtasks = []; if(t.repeat===undefined) t.repeat = null; });
   bindStatic();
   render();
+  if(S.familyKey){
+    sbIsFamily().then(ok => { familyUnlocked = !!ok; if(S.view==='shared') render(); });
+  }
   if(S.google.connected && S.google.clientId){
     try{
       await ensureToken(true);           // silent — no popup
@@ -879,7 +988,7 @@ function fireRules(task, change){
     const exists = S.externalEvents.some(e => e.taskId===task.id);
     if(!exists){
       S.externalEvents.push({id:uid(), taskId:task.id, title:'⏰ '+task.title, date, source:'rule'});
-      log(`Rule fired (simulated): “${task.title}” → priority High → placeholder event created (${fmtDue(date)})`, 'rule');
+      log(`Rule fired (simulated): "${task.title}" → priority High → placeholder event created (${fmtDue(date)})`, 'rule');
       toast('Rule fired: calendar placeholder created');
     }
   }
@@ -888,7 +997,7 @@ function fireRules(task, change){
     const ev = S.externalEvents.find(e => e.taskId===task.id);
     if(ev && !ev.title.startsWith('✓')){
       ev.title = '✓ ' + ev.title.replace(/^⏰ /,'');
-      log(`Rule fired (simulated): “${task.title}” completed → linked event marked done`, 'rule');
+      log(`Rule fired (simulated): "${task.title}" completed → linked event marked done`, 'rule');
     }
   }
   if(change==='due'){
@@ -900,7 +1009,7 @@ function fireRules(task, change){
     const ev = S.externalEvents.find(e => e.taskId===task.id);
     if(ev && task.due){
       ev.date = task.due;
-      log(`Data sync (simulated): due date change on “${task.title}” pushed to its event`, 'sync');
+      log(`Data sync (simulated): due date change on "${task.title}" pushed to its event`, 'sync');
     }
   }
 }
@@ -1027,12 +1136,12 @@ async function gcalCreateEvent(task){
     start:{date}, end:{date: addDays(date,1)}
   });
   task.gcalEventId = ev.id;
-  log(`Real Calendar API: created event for “${task.title}” on ${fmtDue(date)}`,'rule');
+  log(`Real Calendar API: created event for "${task.title}" on ${fmtDue(date)}`,'rule');
 }
 async function gcalPatchEvent(task, fields){
   if(!task.gcalEventId) return;
   await gcalRequest('PATCH', `/calendars/primary/events/${task.gcalEventId}`, fields);
-  log(`Real Calendar API: updated event for “${task.title}”`,'sync');
+  log(`Real Calendar API: updated event for "${task.title}"`,'sync');
 }
 async function gcalDeleteOrMarkDone(task){
   if(!task.gcalEventId) return;
@@ -1065,6 +1174,26 @@ async function gcalListEvents(monthISO){
     date:(e.start && (e.start.date || (e.start.dateTime||'').slice(0,10)))||null,
     source:'google'
   })).filter(e=>e.date);
+}
+
+/* Range variant used by the Roadmap's Calendar lane: one call across the
+   whole visible month span, and — unlike gcalListEvents above — it keeps
+   each event's real end date so multi-day spans (e.g. a week of planned
+   holidays) render as a single bar instead of only showing on day one. */
+async function gcalListEventsRange(startISO, endISOExclusive){
+  const timeMin = new Date(startISO+'T00:00:00').toISOString();
+  const timeMax = new Date(endISOExclusive+'T00:00:00').toISOString();
+  const data = await gcalRequest('GET', `/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true&orderBy=startTime&maxResults=250`);
+  return (data.items||[]).map(e => {
+    const allDay = !!(e.start && e.start.date);
+    const startDate = e.start && (e.start.date || (e.start.dateTime||'').slice(0,10));
+    const endRaw = e.end && (e.end.date || (e.end.dateTime||'').slice(0,10));
+    if(!startDate) return null;
+    // Google's all-day "end.date" is exclusive (the day AFTER the last day) — pull it back one day.
+    let endDate = allDay && endRaw ? addDays(endRaw, -1) : (endRaw || startDate);
+    if(endDate < startDate) endDate = startDate;
+    return { id:e.id, title:e.summary||'(untitled event)', date:startDate, endDate, allDay };
+  }).filter(Boolean);
 }
 
 /* ---------- Drive appDataFolder (cross-device state sync) ---------- */
@@ -1132,7 +1261,12 @@ async function driveMergeOnLoad(){
 function bindStatic(){
   wireAiPanel();
   document.querySelectorAll('.view-tabs button').forEach(b => {
-    b.addEventListener('click', () => { S.view = b.dataset.view; save(); render(); });
+    b.addEventListener('click', () => {
+      S.view = b.dataset.view; save();
+      if(S.view==='shared'){ refreshSharedTasks(true); startSharedPolling(); }
+      else { stopSharedPolling(); }
+      render();
+    });
   });
   const wf = document.getElementById('weeklyFocus');
   wf.addEventListener('change', () => { S.weeklyFocus = wf.value; save(); toast('Weekly focus updated'); });
@@ -1194,9 +1328,13 @@ function render(){
   document.getElementById('syncBadge').textContent = S.externalEvents.length;
   document.querySelectorAll('.view-tabs button').forEach(b => b.classList.toggle('active', b.dataset.view===S.view));
   document.getElementById('sortWrap').style.visibility = (S.view==='list') ? 'visible':'hidden';
+  const qa = document.querySelector('.quickadd');
+  if(qa) qa.style.display = ['today','list','table','board','calendar'].includes(S.view) ? 'flex' : 'none';
   const m = document.getElementById('main');
-  if(S.view==='today') m.innerHTML = renderToday();
+  if(S.view==='roadmap'){ m.innerHTML = renderRoadmap(); maybePullRoadmapEvents(); }
+  else if(S.view==='today') m.innerHTML = renderToday();
   else if(S.view==='list') m.innerHTML = renderList();
+  else if(S.view==='shared') m.innerHTML = renderShared();
   else if(S.view==='table') m.innerHTML = renderTable();
   else if(S.view==='board') m.innerHTML = renderBoard();
   else if(S.view==='calendar'){ m.innerHTML = renderCalendar(); maybePullRealEvents(); }
@@ -1356,6 +1494,118 @@ function renderList(){
   }).join('');
 }
 
+/* ---------- Shared list (family to-do) ----------
+   Same visual language as the List tab, but the data lives in Supabase
+   (S.sharedTasks is just the local cache) so it's the same list whether
+   you or your wife opens this link — no Google account needed. Reading
+   is public; adding/checking off/deleting requires the family key, a
+   passphrase you share with her once (see the Sync-tab-style setup
+   card that appears until a key is entered). */
+let familyUnlocked = false;
+
+function sharedTaskRow(t){
+  const dueCls = !t.due ? '' : (t.due < todayISO() && !t.done ? 'overdue' : (t.due===todayISO() ? 'today':''));
+  return `<div class="task-row ${t.done?'done':''}" data-sharedid="${t.id}" style="cursor:default">
+    <button class="checkbox ${t.done?'checked':''}" data-sharedcheck="${t.id}" aria-label="Complete task" ${familyUnlocked?'':'disabled'}>
+      <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.5 4.8 9 10 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <span class="t-title" ${familyUnlocked?`data-sharededit="${t.id}" style="cursor:text"`:''}>${esc(t.title)}</span>
+    ${t.priority?`<span class="pill p-${t.priority}">${PRI_LABEL[t.priority]}</span>`:''}
+    ${t.addedBy?`<span class="pill project" title="Added by">${esc(t.addedBy)}</span>`:''}
+    <span class="t-due ${dueCls}">${fmtDue(t.due)}</span>
+    ${familyUnlocked?`<button class="icon-btn" data-shareddel="${t.id}" title="Delete" style="width:22px;height:22px;min-width:22px">✕</button>`:''}
+  </div>`;
+}
+
+function renderShared(){
+  const byTopic = {};
+  S.sharedTasks.forEach(t => { const k = t.topic||'General'; (byTopic[k]||(byTopic[k]=[])).push(t); });
+  const topics = Object.keys(byTopic).sort();
+  const sections = topics.map(topic => {
+    const ts = byTopic[topic].slice().sort((a,b)=> (a.done===b.done?0:(a.done?1:-1)) || (a.due||'9999').localeCompare(b.due||'9999'));
+    return `<div class="section-block">
+      <div class="section-head"><span class="topic-dot" style="background:${topicColor(topic)}"></span>${esc(topic)} <span class="count">${ts.length}</span></div>
+      ${ts.map(sharedTaskRow).join('')}
+    </div>`;
+  }).join('') || `<div class="empty-note">No shared tasks yet — ${familyUnlocked ? 'add one below.' : 'unlock editing below to add the first one.'}</div>`;
+
+  const gateHtml = familyUnlocked
+    ? `<div class="status-row" style="margin-bottom:14px">
+        <span class="status-dot on"></span>
+        <span style="font-size:.82rem;color:var(--ink-soft)">Unlocked as <b>${esc(S.myName||'you')}</b> — add, check off and delete freely.</span>
+        <button class="chip-btn" id="btnLockShared" style="background:#eef0f4;color:var(--ink)">Lock</button>
+      </div>`
+    : `<div class="avail-card" style="margin-bottom:14px">
+        <p style="font-size:.85rem;margin-bottom:10px">Anyone with this link can <b>view</b> this list. To add, check off, or delete tasks, enter the family key — ask whoever set this up if you don't have it.</p>
+        <div class="grid2" style="margin-bottom:10px">
+          <div class="field"><label>Your name</label><input id="sharedMyName" type="text" placeholder="e.g. Catalina" value="${esc(S.myName)}"></div>
+          <div class="field"><label>Family key</label><input id="sharedFamilyKey" type="password" placeholder="Ask for the key"></div>
+        </div>
+        <button class="btn primary" id="btnUnlockShared">Unlock editing</button>
+      </div>`;
+
+  const quickAdd = familyUnlocked ? `<div class="quickadd" style="padding:0 0 14px">
+      <input type="text" id="sharedQuickAdd" placeholder="Add a shared task… e.g. 'Buy diapers !high tomorrow #Household'">
+      <button class="add-btn" id="sharedQuickAddBtn">Add</button>
+    </div>` : '';
+
+  return `<div>
+    ${gateHtml}
+    ${quickAdd}
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="chip-btn" id="btnRefreshShared" style="background:#eef0f4;color:var(--ink)">↻ Refresh</button>
+    </div>
+    ${sections}
+  </div>`;
+}
+
+/* Quick-add parser for the shared list — same "!high / tomorrow / jul 10"
+   syntax as the personal quick-add, plus "#Topic" to set the group. */
+function sharedQuickAdd(text){
+  let priority = null, due = null, topic = 'General';
+  text = text.replace(/!(high|med(ium)?|low)\b/i, (m,p) => { priority = p.toLowerCase().startsWith('med')?'medium':p.toLowerCase(); return ''; });
+  text = text.replace(/#(\S+)/, (m,p) => { topic = p.replace(/[_-]+/g,' '); return ''; });
+  text = text.replace(/\b(today|tomorrow)\b/i, m => { due = m.toLowerCase()==='today'?todayISO():addDays(todayISO(),1); return ''; });
+  const mo = text.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2})\b/i);
+  if(mo){
+    const monthsArr = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    const y = new Date().getFullYear();
+    const d = new Date(y, monthsArr.indexOf(mo[1].slice(0,3).toLowerCase()), +mo[2]);
+    if(d < new Date(todayISO())) d.setFullYear(y+1);
+    due = iso(d); text = text.replace(mo[0],'');
+  }
+  const t = { id:uid(), title:text.trim()||'Untitled task', topic, priority, due, done:false, addedBy:S.myName||'', doneBy:'' };
+  S.sharedTasks.push(t); render();
+  sbInsertSharedTask(t).then(()=>toast('Added to shared list')).catch(e => {
+    console.error(e);
+    toast('Could not save — check your family key');
+    S.sharedTasks = S.sharedTasks.filter(x=>x.id!==t.id); render();
+  });
+}
+
+/* Pull the latest shared list from Supabase. Supabase is the source of
+   truth here (like bookings) — the local copy is just a cache so the UI
+   has something to show while a fetch is in flight. */
+let sharedSyncing = false;
+async function refreshSharedTasks(force){
+  if(sharedSyncing) return;
+  if(!sbConfigured()){ if(force) toast('No shared backend configured — see Sync tab'); return; }
+  sharedSyncing = true;
+  try{
+    const remote = await sbFetchSharedTasks();
+    if(remote !== null){
+      S.sharedTasks = remote; save();
+      if(S.view==='shared') render();
+    } else if(force){ toast('Could not reach the shared list — see console'); }
+  } finally { sharedSyncing = false; }
+}
+let sharedPollTimer = null;
+function startSharedPolling(){
+  stopSharedPolling();
+  sharedPollTimer = setInterval(() => refreshSharedTasks(), 20000); // light polling while the tab is open
+}
+function stopSharedPolling(){ if(sharedPollTimer){ clearInterval(sharedPollTimer); sharedPollTimer = null; } }
+
 function boardCard(t){
   return `<div class="board-card ${t.done?'done':''}" draggable="true" data-id="${t.id}">
     <div class="bc-title">${esc(t.title)}</div>
@@ -1433,6 +1683,179 @@ function renderCalendar(){
         }).join('')}
       </div>
     </div>
+  </div>`;
+}
+
+/* ---------- Roadmap Calendar lane: data + interactions ----------
+   Shows real Google Calendar events (the "master calendar") as their own
+   bars alongside the topic lanes — e.g. a week of planned holidays spans
+   visually across a month boundary instead of being reduced to a single
+   due-date dot. Read is a single ranged Calendar API call, cached per
+   visible range; write (drag-to-create) posts straight back to Calendar. */
+let roadmapEventsCache = { key:null, events:[] };
+function maybePullRoadmapEvents(force){
+  if(!(S.google.connected && S.google.clientId)){ roadmapEventsCache = {key:null, events:[]}; return; }
+  const key = `${S.roadmap.startMonth}|${S.roadmap.months}`;
+  if(!force && roadmapEventsCache.key===key) return;
+  roadmapEventsCache.key = key; // set before the await so a second render doesn't refire the fetch
+  const rangeStart = `${S.roadmap.startMonth}-01`;
+  const rangeEndExclusive = monthAdd(S.roadmap.startMonth, S.roadmap.months) + '-01';
+  gcalListEventsRange(rangeStart, rangeEndExclusive).then(events => {
+    roadmapEventsCache = { key, events };
+    if(S.view==='roadmap') render();
+  }).catch(e => { console.error('roadmap calendar fetch failed', e); roadmapEventsCache = {key:null, events:[]}; });
+}
+/* Live Google → real fetched events. Not connected → fall back to
+   whatever's in the simulated externalEvents list (rule placeholders and
+   anything drawn on the Roadmap while offline), normalized to the same
+   {date,endDate} shape. */
+function roadmapCalendarEvents(){
+  if(S.google.connected && S.google.clientId) return roadmapEventsCache.events || [];
+  return S.externalEvents.map(e => ({ id:e.id, title:e.title, date:e.date, endDate:e.endDate||e.date }));
+}
+/* Greedy interval partitioning so overlapping events (e.g. two holidays
+   that bracket a long weekend) stack into separate sub-lanes instead of
+   drawing on top of each other. */
+function stackIntervals(events){
+  const sorted = [...events].sort((a,b) => a.date.localeCompare(b.date) || a.endDate.localeCompare(b.endDate));
+  const laneEnds = [];
+  const placed = sorted.map(ev => {
+    let lane = laneEnds.findIndex(end => end < ev.date);
+    if(lane===-1){ lane = laneEnds.length; laneEnds.push(ev.endDate); }
+    else laneEnds[lane] = ev.endDate;
+    return Object.assign({}, ev, {lane});
+  });
+  return { placed, laneCount: Math.max(1, laneEnds.length) };
+}
+/* Creates a new calendar event spanning [startDate, endDateIncl] — a real
+   all-day Google Calendar event when connected, or a local simulated one
+   (like the rules engine's demo mode) otherwise. */
+async function createRoadmapEvent(startDate, endDateIncl){
+  const title = prompt(startDate===endDateIncl
+    ? `Event title for ${fmtDue(startDate)}`
+    : `Event title for ${fmtDue(startDate)} → ${fmtDue(endDateIncl)}`);
+  if(!title || !title.trim()) return;
+  const clean = title.trim();
+  if(S.google.connected && S.google.clientId){
+    try{
+      await gcalRequest('POST', '/calendars/primary/events', {
+        summary: clean,
+        start:{date:startDate}, end:{date: addDays(endDateIncl,1)} // Calendar API end.date is exclusive
+      });
+      toast(`Added "${clean}" to your Google Calendar`);
+      await maybePullRoadmapEvents(true);
+      render();
+    }catch(e){ console.error(e); toast('Could not create the calendar event — see console'); }
+  } else {
+    S.externalEvents.push({id:uid(), title:clean, date:startDate, endDate:endDateIncl, source:'manual'});
+    log(`Manual (simulated): "${clean}" added to the roadmap calendar lane (${fmtDue(startDate)} → ${fmtDue(endDateIncl)})`, 'sync');
+    save(); render();
+    toast('Added — connect Google in the Sync tab to make this a real calendar event');
+  }
+}
+
+/* ---------- Roadmap (landing tab): topic timeline across a custom month range ----------
+   One row per topic (the task's project field). A translucent band shows
+   the topic's overall extension — earliest start/due to latest due — and
+   a dot per task marks its due date, colored by priority. This is a plain
+   view over the same S.tasks used everywhere else: nothing new to sync. */
+function renderRoadmap(){
+  const rm = S.roadmap;
+  const months = []; for(let i=0;i<rm.months;i++) months.push(monthAdd(rm.startMonth, i));
+  const curYM = todayISO().slice(0,7);
+
+  const byTopic = {};
+  S.tasks.forEach(t => {
+    if(!t.due) return; // only dated tasks can be placed on a timeline
+    const key = t.project && t.project.trim() ? t.project.trim() : '(No project)';
+    (byTopic[key] || (byTopic[key]=[])).push(t);
+  });
+  const topics = Object.keys(byTopic).sort((a,b) => {
+    const earliest = arr => arr.reduce((m,t)=> (!m||t.due<m)?t.due:m, null);
+    return (earliest(byTopic[a])||'9999') < (earliest(byTopic[b])||'9999') ? -1 : 1;
+  });
+  const undatedCount = S.tasks.filter(t=>!t.due).length;
+
+  // Calendar lane: real (or simulated, offline) events from the master
+  // calendar, clipped to the visible range, stacked so overlapping spans
+  // (e.g. two holidays bracketing a long weekend) get their own sub-row.
+  const rangeStart = `${rm.startMonth}-01`;
+  const rangeEndIncl = addDays(monthAdd(rm.startMonth, rm.months)+'-01', -1);
+  const visibleEvents = roadmapCalendarEvents().filter(e => e.endDate >= rangeStart && e.date <= rangeEndIncl);
+  const { placed: calPlaced, laneCount: calLanes } = stackIntervals(visibleEvents);
+  const calTrackHeight = Math.max(42, calLanes*24 + 14);
+  const calBars = calPlaced.map(e => {
+    const posMin = datePosInRange(e.date, rm.startMonth, rm.months);
+    const posMaxEnd = datePosInRange(addDays(e.endDate,1), rm.startMonth, rm.months);
+    const left = posMin.pct, width = Math.max(posMaxEnd.pct - posMin.pct, 1.2);
+    const top = 7 + e.lane*24;
+    return `<button class="rm-cal-event" style="left:${left}%;width:${width}%;top:${top}px" data-calid="${e.id}"
+      title="${esc(e.title)} · ${fmtDue(e.date)}${e.endDate!==e.date?' → '+fmtDue(e.endDate):''}">${esc(e.title)}</button>`;
+  }).join('');
+  const calMonthCells = months.map(ym => `<div class="rm-month-cell ${ym===curYM?'rm-current':''}"></div>`).join('');
+  const calRow = `<div class="roadmap-row">
+    <div class="rm-label"><span class="topic-dot" style="background:var(--gcal)"></span>📅 Calendar <span class="count">${visibleEvents.length}</span></div>
+    <div class="rm-track rm-cal-track" id="rmCalTrack" style="height:${calTrackHeight}px">
+      ${calMonthCells}
+      ${calBars}
+    </div>
+  </div>`;
+
+  const rangeBtns = [3,6,12,18,24].map(n =>
+    `<button data-rmrange="${n}" class="${rm.months===n?'active':''}">${n<12 ? n+'mo' : (n/12)+'yr'}</button>`
+  ).join('');
+
+  const monthHeadCells = months.map(ym => `<div class="rm-month-cell ${ym===curYM?'rm-current':''}">${monthLabel(ym)}</div>`).join('');
+
+  const rows = topics.map(topic => {
+    const tasks = byTopic[topic].slice().sort((a,b)=>a.due.localeCompare(b.due));
+    const dates = tasks.flatMap(t => [t.start, t.due].filter(Boolean));
+    const minD = dates.reduce((m,d)=> (!m||d<m)?d:m, null);
+    const maxD = dates.reduce((m,d)=> (!m||d>m)?d:m, null);
+    const posMin = datePosInRange(minD, rm.startMonth, rm.months);
+    const posMax = datePosInRange(maxD, rm.startMonth, rm.months);
+    const openCount = tasks.filter(t=>!t.done).length;
+    const color = topicColor(topic);
+    const bandLeft = posMin.pct, bandWidth = Math.max(posMax.pct - posMin.pct, 1.4);
+    const monthCells = months.map(ym => `<div class="rm-month-cell ${ym===curYM?'rm-current':''}"></div>`).join('');
+    const markers = tasks.map(t => {
+      const pos = datePosInRange(t.due, rm.startMonth, rm.months);
+      const cls = t.done ? 'rm-done' : `rm-p-${t.priority||'none'}`;
+      return `<button class="rm-marker ${cls}" style="left:${pos.pct}%" data-id="${t.id}" title="${esc(t.title)} · due ${fmtDue(t.due)}"></button>`;
+    }).join('');
+    return `<div class="roadmap-row">
+      <div class="rm-label"><span class="topic-dot" style="background:${color}"></span>${esc(topic)} <span class="count">${openCount}/${tasks.length}</span></div>
+      <div class="rm-track">
+        ${monthCells}
+        <div class="rm-band" style="left:${bandLeft}%;width:${bandWidth}%;background:${color}30;border-color:${color}"
+             title="${esc(topic)}: ${fmtDue(minD)} → ${fmtDue(maxD)}"></div>
+        ${posMin.overflow==='left' ? '<span class="rm-overflow-left">◀</span>' : ''}
+        ${posMax.overflow==='right' ? '<span class="rm-overflow-right">▶</span>' : ''}
+        ${markers}
+      </div>
+    </div>`;
+  }).join('') || `<div class="empty-note">No dated tasks yet — give a task a due date to see its topic here.</div>`;
+
+  return `<div class="roadmap-wrap">
+    <div class="roadmap-toolbar">
+      <div class="rm-range-tabs" id="rmRangeTabs">${rangeBtns}</div>
+      <div class="spacer"></div>
+      <button class="cal-nav" data-rmnav="-1" aria-label="Earlier">‹</button>
+      <button class="chip-btn" id="rmTodayBtn" style="background:#eef0f4;color:var(--ink)">Today</button>
+      <button class="cal-nav" data-rmnav="1" aria-label="Later">›</button>
+    </div>
+    <div class="cal-legend" style="border:1px solid var(--line);border-radius:10px;padding:8px 12px">
+      <span class="key"><span class="swatch" style="background:var(--hi)"></span>High</span>
+      <span class="key"><span class="swatch" style="background:var(--md)"></span>Medium</span>
+      <span class="key"><span class="swatch" style="background:var(--lo)"></span>Low</span>
+      <span class="key"><span class="swatch" style="border:1.4px solid var(--gcal);background:#fff"></span>Calendar event</span>
+      <span style="margin-left:auto;color:var(--ink-faint)">Drag across the 📅 Calendar row to block out a new event — click an event to see its dates</span>
+    </div>
+    <div class="roadmap-panel">
+      <div class="roadmap-header"><div class="rm-label-head"></div><div class="rm-months-head">${monthHeadCells}</div></div>
+      <div class="roadmap-body">${calRow}${rows}</div>
+    </div>
+    ${undatedCount ? `<div class="empty-note">${undatedCount} task${undatedCount===1?'':'s'} without a due date ${undatedCount===1?'isn\u2019t':'aren\u2019t'} shown here — add a due date in the task drawer to place ${undatedCount===1?'it':'them'} on the timeline.</div>` : ''}
   </div>`;
 }
 
@@ -1674,6 +2097,52 @@ async function sbFetchConfig(){
     if(rows && rows[0]) return { eventTypes: rows[0].event_types, availability: rows[0].availability };
   }catch(e){ console.warn('Supabase config fetch failed', e); }
   return null;
+}
+
+/* ---------- Shared to-do list backend (Supabase, 'shared_tasks' table) ----------
+   Same REST-over-fetch approach as bookings. Reads are public (anyone with
+   the link sees the list); inserts/updates/deletes require an x-family-key
+   header that a Postgres RLS policy checks via an is_family() RPC — see
+   the setup SQL. This is deliberately a *different* secret from the host
+   key above, so you can hand it to your wife without handing over your
+   Google-Calendar-sync admin key too. */
+function sbFamilyHeaders(){
+  const h = sbHeaders();
+  if(S.familyKey) h['x-family-key'] = S.familyKey;
+  return h;
+}
+async function sbFetchSharedTasks(){
+  if(!sbConfigured()) return null;
+  try{
+    const rows = await sbRequest('GET', '/shared_tasks?select=*&order=done.asc,due.asc.nullslast');
+    return rows.map(r => ({
+      id:r.id, title:r.title, topic:r.topic||'General', priority:r.priority, due:r.due,
+      done:r.done, addedBy:r.added_by||'', doneBy:r.done_by||'', createdAt:r.created_at
+    }));
+  }catch(e){ console.warn('shared_tasks fetch failed', e); return null; }
+}
+async function sbInsertSharedTask(t){
+  const row = { id:t.id, title:t.title, topic:t.topic||'General', priority:t.priority, due:t.due, done:false, added_by:t.addedBy||'' };
+  await sbRequest('POST', '/shared_tasks', row, Object.assign({'Prefer':'return=minimal'}, sbFamilyHeaders()));
+}
+async function sbUpdateSharedTask(id, patch){
+  await sbRequest('PATCH', `/shared_tasks?id=eq.${id}`, patch, sbFamilyHeaders());
+}
+async function sbDeleteSharedTask(id){
+  await sbRequest('DELETE', `/shared_tasks?id=eq.${id}`, null, sbFamilyHeaders());
+}
+/* Probe: does the backend accept our family key? Mirrors sbIsHost() but
+   against the separate is_family() RPC, so a wrong/missing key is caught
+   before the UI claims editing is unlocked. */
+async function sbIsFamily(){
+  if(!(sbConfigured() && S.familyKey)) return false;
+  try{
+    const res = await fetch(S.supabase.url.replace(/\/$/,'')+'/rest/v1/rpc/is_family', {
+      method:'POST', headers: sbFamilyHeaders(), body:'{}'
+    });
+    if(!res.ok) return null; // function missing / backend not set up yet — can't tell
+    return (await res.json()) === true;
+  }catch(e){ return null; }
 }
 
 /* =====================================================================
@@ -2295,6 +2764,32 @@ function wirePublic(){
 }
 
 /* ---------- Dynamic wiring per render ---------- */
+/* ---------- Roadmap Calendar-lane drag-to-create ----------
+   Attached once at the window level (not per-render) since .rm-cal-track
+   elements are recreated on every render — only the pointerdown that
+   starts a drag needs re-binding each time (done in wireDynamic below). */
+let rmDrag = null;
+window.addEventListener('pointermove', e => {
+  if(!rmDrag) return;
+  const curPct = Math.max(0, Math.min(100, (e.clientX - rmDrag.rect.left) / rmDrag.rect.width * 100));
+  const left = Math.min(rmDrag.startPct, curPct), width = Math.abs(curPct - rmDrag.startPct);
+  rmDrag.preview.style.left = left+'%';
+  rmDrag.preview.style.width = Math.max(width, 0.4)+'%';
+  rmDrag.curPct = curPct;
+});
+window.addEventListener('pointerup', () => {
+  if(!rmDrag) return;
+  const { startPct, curPct, preview } = rmDrag;
+  preview.remove();
+  rmDrag = null;
+  if(curPct===undefined) return;
+  const p1 = Math.min(startPct, curPct), p2 = Math.max(startPct, curPct);
+  const d1 = dateAtPos(p1, S.roadmap.startMonth, S.roadmap.months);
+  const d2raw = dateAtPos(p2, S.roadmap.startMonth, S.roadmap.months);
+  const d2 = d2raw > d1 ? d2raw : d1;
+  createRoadmapEvent(d1, d2);
+});
+
 function wireDynamic(){
   // open drawer / complete
   document.querySelectorAll('.task-row').forEach(r => {
@@ -2387,6 +2882,83 @@ function wireDynamic(){
     });
   }
 
+  // roadmap controls
+  document.querySelectorAll('[data-rmrange]').forEach(b => b.addEventListener('click', () => { S.roadmap.months = Number(b.dataset.rmrange); save(); render(); }));
+  document.querySelectorAll('[data-rmnav]').forEach(b => b.addEventListener('click', () => { S.roadmap.startMonth = monthAdd(S.roadmap.startMonth, Number(b.dataset.rmnav)); save(); render(); }));
+  const rmTodayBtn = document.getElementById('rmTodayBtn');
+  if(rmTodayBtn) rmTodayBtn.addEventListener('click', () => { S.roadmap.startMonth = todayISO().slice(0,7); save(); render(); });
+  document.querySelectorAll('.rm-marker').forEach(m => m.addEventListener('click', () => openDrawer(m.dataset.id)));
+
+  // roadmap — calendar lane: click an event for details, drag empty space to create one
+  document.querySelectorAll('.rm-cal-event').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const ev = roadmapCalendarEvents().find(x=>x.id===b.dataset.calid); if(!ev) return;
+    toast(`${ev.title} · ${fmtDue(ev.date)}${ev.endDate!==ev.date?' → '+fmtDue(ev.endDate):''}`);
+  }));
+  const rmCalTrack = document.getElementById('rmCalTrack');
+  if(rmCalTrack) rmCalTrack.addEventListener('pointerdown', e => {
+    if(e.target.closest('.rm-cal-event')) return; // clicking an existing bar is handled above, not a new draw
+    const rect = rmCalTrack.getBoundingClientRect();
+    const startPct = (e.clientX - rect.left) / rect.width * 100;
+    const preview = document.createElement('div');
+    preview.className = 'rm-cal-draw-preview';
+    preview.style.left = startPct+'%'; preview.style.width = '0.4%';
+    rmCalTrack.appendChild(preview);
+    rmDrag = { rect, startPct, preview };
+    e.preventDefault();
+  });
+
+  // shared list — unlock / lock
+  const btnUnlockShared = document.getElementById('btnUnlockShared');
+  if(btnUnlockShared) btnUnlockShared.addEventListener('click', async () => {
+    const name = document.getElementById('sharedMyName').value.trim();
+    const key = document.getElementById('sharedFamilyKey').value;
+    if(!key){ toast('Enter the family key first'); return; }
+    S.myName = name; S.familyKey = key; save();
+    btnUnlockShared.disabled = true; btnUnlockShared.textContent = 'Checking…';
+    const ok = await sbIsFamily();
+    btnUnlockShared.disabled = false; btnUnlockShared.textContent = 'Unlock editing';
+    if(ok===true){ familyUnlocked = true; toast('Unlocked — you can now add and edit tasks'); render(); }
+    else if(ok===false){ toast('That key was rejected — double-check it with whoever set this up'); }
+    else{ toast('Could not verify the key right now — check your connection and try again'); }
+  });
+  const btnLockShared = document.getElementById('btnLockShared');
+  if(btnLockShared) btnLockShared.addEventListener('click', () => { familyUnlocked = false; render(); });
+
+  // shared list — refresh + quick add
+  const btnRefreshShared = document.getElementById('btnRefreshShared');
+  if(btnRefreshShared) btnRefreshShared.addEventListener('click', () => { toast('Refreshing shared list…'); refreshSharedTasks(true); });
+  const sqi = document.getElementById('sharedQuickAdd');
+  if(sqi){
+    const doSharedAdd = () => { if(sqi.value.trim()){ sharedQuickAdd(sqi.value.trim()); sqi.value=''; } };
+    document.getElementById('sharedQuickAddBtn').addEventListener('click', doSharedAdd);
+    sqi.addEventListener('keydown', e => { if(e.key==='Enter') doSharedAdd(); });
+  }
+
+  // shared list — check off / edit title / delete
+  document.querySelectorAll('[data-sharedcheck]').forEach(b => b.addEventListener('click', () => {
+    const t = S.sharedTasks.find(x=>x.id===b.dataset.sharedcheck); if(!t) return;
+    t.done = !t.done; t.doneBy = t.done ? (S.myName||'') : '';
+    render();
+    sbUpdateSharedTask(t.id, {done:t.done, done_by:t.doneBy}).catch(e => { console.error(e); toast('Could not sync — check your family key'); });
+  }));
+  document.querySelectorAll('[data-sharededit]').forEach(el => el.addEventListener('click', () => {
+    const id = el.dataset.sharededit;
+    const t = S.sharedTasks.find(x=>x.id===id); if(!t) return;
+    const val = prompt('Edit task title', t.title);
+    if(val===null) return;
+    t.title = val.trim() || t.title;
+    render();
+    sbUpdateSharedTask(id, {title:t.title}).catch(e => { console.error(e); toast('Could not sync — check your family key'); });
+  }));
+  document.querySelectorAll('[data-shareddel]').forEach(b => b.addEventListener('click', () => {
+    if(!confirm('Delete this shared task?')) return;
+    const id = b.dataset.shareddel;
+    S.sharedTasks = S.sharedTasks.filter(x=>x.id!==id);
+    render();
+    sbDeleteSharedTask(id).catch(e => { console.error(e); toast('Could not sync — check your family key'); });
+  }));
+
   // sync view controls
   const bi = document.getElementById('btnIcs');
   if(bi) bi.addEventListener('click', () => { download('my-tasks.ics', buildICS(), 'text/calendar'); toast('.ics downloaded — import it into Google Calendar'); });
@@ -2396,13 +2968,13 @@ function wireDynamic(){
     catch(e){ toast('Clipboard blocked — use Download instead'); }
   });
   const rh = document.getElementById('ruleHigh');
-  if(rh) rh.addEventListener('change', () => { S.rules.highToEvent = rh.checked; log(`Rule “High → calendar event” turned ${rh.checked?'ON':'OFF'}`,'rule'); save(); render(); });
+  if(rh) rh.addEventListener('change', () => { S.rules.highToEvent = rh.checked; log(`Rule "High → calendar event" turned ${rh.checked?'ON':'OFF'}`,'rule'); save(); render(); });
   const rd = document.getElementById('ruleDone');
-  if(rd) rd.addEventListener('change', () => { S.rules.completeMarks = rd.checked; log(`Rule “complete → annotate event” turned ${rd.checked?'ON':'OFF'}`,'rule'); save(); render(); });
+  if(rd) rd.addEventListener('change', () => { S.rules.completeMarks = rd.checked; log(`Rule "complete → annotate event" turned ${rd.checked?'ON':'OFF'}`,'rule'); save(); render(); });
   const ra = document.getElementById('ruleAll');
   if(ra) ra.addEventListener('change', async () => {
     S.rules.allTasksToEvents = ra.checked;
-    log(`Rule “every due-dated task → calendar event” turned ${ra.checked?'ON':'OFF'}`,'rule');
+    log(`Rule "every due-dated task → calendar event" turned ${ra.checked?'ON':'OFF'}`,'rule');
     save();
     if(ra.checked && S.google.connected){
       const n = await reconcileCalendar();
@@ -2670,8 +3242,10 @@ async function aiAutofillTask(){
    touching the drawer itself. */
 function refreshBackground(){
   const m = document.getElementById('main');
-  if(S.view==='today') m.innerHTML = renderToday();
+  if(S.view==='roadmap') m.innerHTML = renderRoadmap();
+  else if(S.view==='today') m.innerHTML = renderToday();
   else if(S.view==='list') m.innerHTML = renderList();
+  else if(S.view==='shared') m.innerHTML = renderShared();
   else if(S.view==='table') m.innerHTML = renderTable();
   else if(S.view==='board') m.innerHTML = renderBoard();
   else if(S.view==='calendar') m.innerHTML = renderCalendar();
