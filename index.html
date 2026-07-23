@@ -553,6 +553,7 @@ body.ai-open #aiPanel{display:flex}
 .rm-overflow-left{left:2px}
 .rm-overflow-right{right:2px}
 .rm-cal-track{cursor:crosshair;user-select:none}
+.rm-task-track{cursor:crosshair;user-select:none}
 .rm-cal-event{
   position:absolute;height:20px;border-radius:6px;background:#fff;border:1.4px solid var(--gcal);color:var(--gcal);
   font-size:.7rem;font-weight:600;text-align:left;padding:0 8px;line-height:18px;
@@ -563,6 +564,12 @@ body.ai-open #aiPanel{display:flex}
   position:absolute;top:7px;height:20px;border-radius:6px;background:var(--accent-soft);
   border:1.4px dashed var(--accent);pointer-events:none;
 }
+.rm-popup-scrim{position:fixed;inset:0;background:rgba(20,26,33,.35);z-index:65;display:flex;align-items:center;justify-content:center;padding:20px}
+.rm-popup{background:var(--card);border-radius:14px;box-shadow:0 12px 40px rgba(29,39,51,.25);width:min(360px,92vw);padding:20px}
+.rm-popup h3{font-family:'Sora';font-size:1rem;margin-bottom:4px}
+.rm-popup .rm-popup-dates{font-size:.78rem;color:var(--ink-faint);margin-bottom:14px}
+.rm-popup .field{margin-bottom:12px}
+.rm-popup .btn-row{margin-top:2px;justify-content:flex-end}
 
 /* ---------- Shared list (family to-do) ---------- */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -1002,7 +1009,13 @@ function fireRules(task, change){
   }
   if(change==='due'){
     if(live){
-      if(task.gcalEventId){ gcalPatchEvent(task, { start:{date:task.due}, end:{date:addDays(task.due,1)} }).then(render).catch(e=>console.error(e)); }
+      if(task.gcalEventId){
+        const { startDateTime, endDateTime } = timedWindowFromNow(task.due, 1);
+        gcalPatchEvent(task, {
+          start:{ dateTime:startDateTime, timeZone:S.availability.timezone },
+          end:{ dateTime:endDateTime, timeZone:S.availability.timezone }
+        }).then(render).catch(e=>console.error(e));
+      }
       else if(S.rules.allTasksToEvents && task.due){ gcalCreateEvent(task).then(()=>{save();render();}).catch(e=>console.error(e)); }
       return;
     }
@@ -1128,12 +1141,34 @@ async function gcalRequest(method, path, body){
   if(!res.ok) throw new Error(`Calendar API ${method} ${path} → ${res.status}`);
   return res.status===204 ? null : res.json();
 }
-async function gcalCreateEvent(task){
+/* Default event time for task-triggered calendar events: "right now + 3h"
+   instead of an all-day banner, so same-day task events spread across the
+   hour grid instead of piling up in Google Calendar's all-day strip.
+   staggerIndex adds 30min per step so a batch created together (e.g. a
+   "Sync now" that catches up several High tasks at once) still lands at
+   different times instead of all stacking on the same slot. Clamped so a
+   `durationHours` block always fits before midnight. */
+function timedWindowFromNow(dateISO, durationHours, staggerIndex){
+  const now = new Date();
+  const offsetMin = 180 + (staggerIndex||0)*30; // +3h base, +30min per stagger step
+  let totalMin = now.getHours()*60 + now.getMinutes() + offsetMin;
+  const maxStartMin = (23 - durationHours)*60 + 59;
+  if(totalMin > maxStartMin) totalMin = maxStartMin;
+  const startHour = Math.floor(totalMin/60), startMin = totalMin%60;
+  const endHour = startHour + durationHours;
+  return {
+    startDateTime: `${dateISO}T${pad(startHour)}:${pad(startMin)}:00`,
+    endDateTime: `${dateISO}T${pad(endHour)}:${pad(startMin)}:00`
+  };
+}
+async function gcalCreateEvent(task, staggerIndex){
   const date = task.due || addDays(todayISO(),1);
+  const { startDateTime, endDateTime } = timedWindowFromNow(date, 1, staggerIndex);
   const ev = await gcalRequest('POST','/calendars/primary/events', {
     summary: '⏰ ' + task.title,
     description: `Created by My Tasks rule: priority → High\nProject: ${task.project||'—'}`,
-    start:{date}, end:{date: addDays(date,1)}
+    start:{ dateTime:startDateTime, timeZone:S.availability.timezone },
+    end:{ dateTime:endDateTime, timeZone:S.availability.timezone }
   });
   task.gcalEventId = ev.id;
   log(`Real Calendar API: created event for "${task.title}" on ${fmtDue(date)}`,'rule');
@@ -1157,8 +1192,9 @@ async function reconcileCalendar(){
     (S.rules.highToEvent && t.priority==='high') ||
     (S.rules.allTasksToEvents && t.due)
   ));
+  let i = 0;
   for(const t of missing){
-    try{ await gcalCreateEvent(t); }catch(e){ console.error('reconcile failed for', t.title, e); }
+    try{ await gcalCreateEvent(t, i); i++; }catch(e){ console.error('reconcile failed for', t.title, e); }
   }
   if(missing.length) save();
   return missing.length;
@@ -1727,21 +1763,29 @@ function stackIntervals(events){
   });
   return { placed, laneCount: Math.max(1, laneEnds.length) };
 }
-/* Creates a new calendar event spanning [startDate, endDateIncl] — a real
-   all-day Google Calendar event when connected, or a local simulated one
-   (like the rules engine's demo mode) otherwise. */
+/* Creates a new calendar event spanning [startDate, endDateIncl]. A
+   single-day drag becomes a timed event (now+3h, like task events below)
+   so it doesn't add to the all-day pile; a multi-day drag (a holiday,
+   a trip) stays a proper all-day span — that's still the clearest way
+   to show a date range. Real Google Calendar event when connected, or a
+   local simulated placeholder (like the rules engine's demo mode) otherwise. */
 async function createRoadmapEvent(startDate, endDateIncl){
   const title = prompt(startDate===endDateIncl
     ? `Event title for ${fmtDue(startDate)}`
     : `Event title for ${fmtDue(startDate)} → ${fmtDue(endDateIncl)}`);
   if(!title || !title.trim()) return;
   const clean = title.trim();
+  const singleDay = startDate===endDateIncl;
   if(S.google.connected && S.google.clientId){
     try{
-      await gcalRequest('POST', '/calendars/primary/events', {
-        summary: clean,
-        start:{date:startDate}, end:{date: addDays(endDateIncl,1)} // Calendar API end.date is exclusive
-      });
+      const body = singleDay
+        ? (() => { const w = timedWindowFromNow(startDate, 1); return {
+            summary: clean,
+            start:{ dateTime:w.startDateTime, timeZone:S.availability.timezone },
+            end:{ dateTime:w.endDateTime, timeZone:S.availability.timezone }
+          }; })()
+        : { summary: clean, start:{date:startDate}, end:{date: addDays(endDateIncl,1)} }; // Calendar API end.date is exclusive
+      await gcalRequest('POST', '/calendars/primary/events', body);
       toast(`Added "${clean}" to your Google Calendar`);
       await maybePullRoadmapEvents(true);
       render();
@@ -1825,7 +1869,7 @@ function renderRoadmap(){
     }).join('');
     return `<div class="roadmap-row">
       <div class="rm-label"><span class="topic-dot" style="background:${color}"></span>${esc(topic)} <span class="count">${openCount}/${tasks.length}</span></div>
-      <div class="rm-track">
+      <div class="rm-track rm-task-track" data-topic="${esc(topic)}">
         ${monthCells}
         <div class="rm-band" style="left:${bandLeft}%;width:${bandWidth}%;background:${color}30;border-color:${color}"
              title="${esc(topic)}: ${fmtDue(minD)} → ${fmtDue(maxD)}"></div>
@@ -1834,7 +1878,15 @@ function renderRoadmap(){
         ${markers}
       </div>
     </div>`;
-  }).join('') || `<div class="empty-note">No dated tasks yet — give a task a due date to see its topic here.</div>`;
+  }).join('') || `<div class="empty-note">No dated tasks yet — give a task a due date, or drag on the row below to create one.</div>`;
+
+  const addTopicMonthCells = months.map(ym => `<div class="rm-month-cell ${ym===curYM?'rm-current':''}"></div>`).join('');
+  const addTopicRow = `<div class="roadmap-row">
+    <div class="rm-label" style="color:var(--ink-faint)">+ New topic</div>
+    <div class="rm-track rm-task-track" data-topic="">
+      ${addTopicMonthCells}
+    </div>
+  </div>`;
 
   return `<div class="roadmap-wrap">
     <div class="roadmap-toolbar">
@@ -1849,11 +1901,11 @@ function renderRoadmap(){
       <span class="key"><span class="swatch" style="background:var(--md)"></span>Medium</span>
       <span class="key"><span class="swatch" style="background:var(--lo)"></span>Low</span>
       <span class="key"><span class="swatch" style="border:1.4px solid var(--gcal);background:#fff"></span>Calendar event</span>
-      <span style="margin-left:auto;color:var(--ink-faint)">Drag across the 📅 Calendar row to block out a new event — click an event to see its dates</span>
+      <span style="margin-left:auto;color:var(--ink-faint)">Drag the 📅 Calendar row for an event, or a topic row for a task — click anything existing to see its details</span>
     </div>
     <div class="roadmap-panel">
       <div class="roadmap-header"><div class="rm-label-head"></div><div class="rm-months-head">${monthHeadCells}</div></div>
-      <div class="roadmap-body">${calRow}${rows}</div>
+      <div class="roadmap-body">${calRow}${rows}${addTopicRow}</div>
     </div>
     ${undatedCount ? `<div class="empty-note">${undatedCount} task${undatedCount===1?'':'s'} without a due date ${undatedCount===1?'isn\u2019t':'aren\u2019t'} shown here — add a due date in the task drawer to place ${undatedCount===1?'it':'them'} on the timeline.</div>` : ''}
   </div>`;
@@ -2779,7 +2831,7 @@ window.addEventListener('pointermove', e => {
 });
 window.addEventListener('pointerup', () => {
   if(!rmDrag) return;
-  const { startPct, curPct, preview } = rmDrag;
+  const { startPct, curPct, preview, mode, topic } = rmDrag;
   preview.remove();
   rmDrag = null;
   if(curPct===undefined) return;
@@ -2787,8 +2839,62 @@ window.addEventListener('pointerup', () => {
   const d1 = dateAtPos(p1, S.roadmap.startMonth, S.roadmap.months);
   const d2raw = dateAtPos(p2, S.roadmap.startMonth, S.roadmap.months);
   const d2 = d2raw > d1 ? d2raw : d1;
-  createRoadmapEvent(d1, d2);
+  if(mode==='task') openTaskDrawPopup(d1, d2, topic);
+  else createRoadmapEvent(d1, d2);
 });
+
+/* ---------- Roadmap task-row drag-to-create: the popup ----------
+   A small centered modal (not a browser prompt) so dragging a range on a
+   topic row can capture title / topic / priority in one step, then create
+   the task with start/due set from the drag. */
+function openTaskDrawPopup(startDate, dueDate, prefillTopic){
+  closeTaskDrawPopup();
+  const sameDay = startDate===dueDate;
+  const scrim = document.createElement('div');
+  scrim.className = 'rm-popup-scrim';
+  scrim.id = 'rmTaskPopupScrim';
+  scrim.innerHTML = `<div class="rm-popup">
+    <h3>New task</h3>
+    <div class="rm-popup-dates">${sameDay ? fmtDue(startDate) : fmtDue(startDate)+' → '+fmtDue(dueDate)}</div>
+    <div class="field"><label>Title</label><input id="rmpTitle" type="text" placeholder="e.g. Book flights"></div>
+    <div class="field"><label>Topic / project</label><input id="rmpTopic" type="text" value="${esc(prefillTopic||'')}" placeholder="e.g. Work"></div>
+    <div class="field"><label>Priority</label>
+      <select id="rmpPriority">
+        <option value="">— None —</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn ghost" id="rmpCancel">Cancel</button>
+      <button class="btn accent" id="rmpSave">Create task</button>
+    </div>
+  </div>`;
+  document.body.appendChild(scrim);
+  scrim.addEventListener('click', e => { if(e.target===scrim) closeTaskDrawPopup(); });
+  document.getElementById('rmpCancel').addEventListener('click', closeTaskDrawPopup);
+  document.getElementById('rmpTitle').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('rmpSave').click(); });
+  document.getElementById('rmpSave').addEventListener('click', () => {
+    const title = document.getElementById('rmpTitle').value.trim();
+    if(!title){ toast('Give the task a title'); return; }
+    const topic = document.getElementById('rmpTopic').value.trim();
+    const priority = document.getElementById('rmpPriority').value || null;
+    const t = {
+      id:uid(), title, project:topic, priority, start: sameDay?null:startDate, due: dueDate,
+      section: dueDate===todayISO() ? 'today' : 'upcoming', done:false, notes:'', subtasks:[], repeat:null
+    };
+    S.tasks.push(t);
+    if(priority==='high') fireRules(t,'priority');
+    save(); closeTaskDrawPopup(); render();
+    toast('Task added to the roadmap');
+  });
+  document.getElementById('rmpTitle').focus();
+}
+function closeTaskDrawPopup(){
+  const el = document.getElementById('rmTaskPopupScrim');
+  if(el) el.remove();
+}
 
 function wireDynamic(){
   // open drawer / complete
@@ -2904,8 +3010,23 @@ function wireDynamic(){
     preview.className = 'rm-cal-draw-preview';
     preview.style.left = startPct+'%'; preview.style.width = '0.4%';
     rmCalTrack.appendChild(preview);
-    rmDrag = { rect, startPct, preview };
+    rmDrag = { rect, startPct, preview, mode:'cal' };
     e.preventDefault();
+  });
+
+  // roadmap — topic rows: drag empty space to create a task (opens the popup on release)
+  document.querySelectorAll('.rm-task-track').forEach(track => {
+    track.addEventListener('pointerdown', e => {
+      if(e.target.closest('.rm-marker')) return; // clicking an existing task marker opens its drawer instead
+      const rect = track.getBoundingClientRect();
+      const startPct = (e.clientX - rect.left) / rect.width * 100;
+      const preview = document.createElement('div');
+      preview.className = 'rm-cal-draw-preview';
+      preview.style.left = startPct+'%'; preview.style.width = '0.4%';
+      track.appendChild(preview);
+      rmDrag = { rect, startPct, preview, mode:'task', topic: track.dataset.topic || '' };
+      e.preventDefault();
+    });
   });
 
   // shared list — unlock / lock
