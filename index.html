@@ -1084,6 +1084,9 @@ async function init(){
   if(S.familyKey){
     sbIsFamily().then(ok => { familyUnlocked = !!ok; if(S.view==='shared') render(); });
   }
+  if(S.supabase.hostKey){
+    finRefresh();
+  }
   if(S.google.connected && S.google.clientId){
     try{
       await ensureToken(true);           // silent — no popup
@@ -1429,6 +1432,8 @@ function bindStatic(){
       S.view = b.dataset.view; save();
       if(S.view==='shared'){ refreshSharedTasks(true); startSharedPolling(); }
       else { stopSharedPolling(); }
+      if(S.view==='finance'){ finRefresh(true); startFinPolling(); }
+      else { stopFinPolling(); }
       render();
     });
   });
@@ -2146,6 +2151,14 @@ function renderFinance(){
     <button data-finsub="recurring" class="${S.finance.view==='recurring'?'active':''}">Recurring</button>
     <button data-finsub="budgets" class="${S.finance.view==='budgets'?'active':''}">Budgets</button>
   </div>`;
+  if(!finUnlocked){
+    return sub + `<div class="avail-card">
+      <p style="font-size:.85rem;margin-bottom:10px">🔒 Finance is private and lives in Supabase, gated behind your <b>host key</b> — the same one that already protects your booking admin actions. Enter it once per device to unlock.</p>
+      <div class="field" style="margin-bottom:10px"><label>Host key</label><input id="finHostKeyInput" type="password" placeholder="Your Supabase host key" value="${esc(S.supabase.hostKey||'')}"></div>
+      <button class="btn primary" id="btnUnlockFinance">Unlock Finance</button>
+      ${sbConfigured() ? '' : '<p class="desc" style="margin-top:10px;font-size:.74rem;color:var(--hi)">No Supabase backend configured yet on this device — check the Sync tab.</p>'}
+    </div>`;
+  }
   if(S.finance.view==='accounts') return sub + renderFinanceAccounts();
   if(S.finance.view==='transactions') return sub + renderFinanceTransactions();
   if(S.finance.view==='recurring') return sub + renderFinanceRecurring();
@@ -2578,6 +2591,98 @@ async function sbIsHost(){
     return (await res.json()) === true;
   }catch(e){ return null; }
 }
+
+/* =====================================================================
+   FINANCE BACKEND — private, host-key-gated (reuses the same is_host()
+   check and x-host-key header that already protects booking admin
+   actions, so there's no new secret to manage). Unlike the shared to-do
+   list this has NO public-read policy at all: every operation, including
+   plain reads, requires the host key. S.finance.accounts/categories/
+   transactions/recurring/budgets are just the local cache; Supabase is
+   the source of truth once unlocked. ===================================================================== */
+let finUnlocked = false;
+let finSyncing = false;
+
+async function sbFetchFinanceAll(){
+  if(!sbConfigured()) return null;
+  const hdr = S.supabase.hostKey ? {'x-host-key':S.supabase.hostKey} : {};
+  const [accounts, categories, transactions, recurring, budgetRows] = await Promise.all([
+    sbRequest('GET','/fin_accounts?select=*', null, hdr),
+    sbRequest('GET','/fin_categories?select=*', null, hdr),
+    sbRequest('GET','/fin_transactions?select=*', null, hdr),
+    sbRequest('GET','/fin_recurring?select=*', null, hdr),
+    sbRequest('GET','/fin_budgets?select=*', null, hdr)
+  ]);
+  return {
+    accounts: accounts.map(r=>({id:r.id, name:r.name, icon:r.icon, color:r.color, startBalance:Number(r.start_balance), archived:!!r.archived})),
+    categories: categories.map(r=>({id:r.id, name:r.name, icon:r.icon, color:r.color, kind:r.kind})),
+    transactions: transactions.map(r=>({id:r.id, accountId:r.account_id, toAccountId:r.to_account_id, categoryId:r.category_id, kind:r.kind, amount:Number(r.amount), date:r.date, note:r.note||'', recurringId:r.recurring_id})),
+    recurring: recurring.map(r=>({id:r.id, title:r.title, accountId:r.account_id, categoryId:r.category_id, kind:r.kind, amount:Number(r.amount), startDate:r.start_date, frequency:r.frequency, active:!!r.active})),
+    budgets: budgetRows.reduce((acc,row)=>{ (acc[row.ym] || (acc[row.ym]={}))[row.category_id] = Number(row.amount); return acc; }, {})
+  };
+}
+function finHdr(extra){ return Object.assign(S.supabase.hostKey?{'x-host-key':S.supabase.hostKey}:{}, extra||{}); }
+async function sbInsertAccount(a){ await sbRequest('POST','/fin_accounts', {id:a.id,name:a.name,icon:a.icon,color:a.color,start_balance:a.startBalance,archived:a.archived}, finHdr({'Prefer':'return=minimal'})); }
+async function sbUpdateAccount(id, patch){ await sbRequest('PATCH', `/fin_accounts?id=eq.${id}`, patch, finHdr()); }
+async function sbInsertCategory(c){ await sbRequest('POST','/fin_categories', {id:c.id,name:c.name,icon:c.icon,color:c.color,kind:c.kind}, finHdr({'Prefer':'return=minimal'})); }
+async function sbInsertTransaction(t){ await sbRequest('POST','/fin_transactions', {id:t.id,account_id:t.accountId,to_account_id:t.toAccountId||null,category_id:t.categoryId||null,kind:t.kind,amount:t.amount,date:t.date,note:t.note||'',recurring_id:t.recurringId||null}, finHdr({'Prefer':'return=minimal'})); }
+async function sbDeleteTransaction(id){ await sbRequest('DELETE', `/fin_transactions?id=eq.${id}`, null, finHdr()); }
+async function sbInsertRecurring(r){ await sbRequest('POST','/fin_recurring', {id:r.id,title:r.title,account_id:r.accountId,category_id:r.categoryId,kind:r.kind,amount:r.amount,start_date:r.startDate,frequency:r.frequency,active:r.active}, finHdr({'Prefer':'return=minimal'})); }
+async function sbUpdateRecurring(id, patch){ await sbRequest('PATCH', `/fin_recurring?id=eq.${id}`, patch, finHdr()); }
+async function sbDeleteRecurring(id){ await sbRequest('DELETE', `/fin_recurring?id=eq.${id}`, null, finHdr()); }
+async function sbUpsertBudget(ym, categoryId, amount){ await sbRequest('POST', '/fin_budgets', {ym, category_id:categoryId, amount}, finHdr({'Prefer':'resolution=merge-duplicates,return=minimal'})); }
+
+/* One-time bootstrap: if Supabase has nothing yet but this device has
+   local Finance data (the common first-run case — you'd already been
+   using the tab before it was backed by a database), push everything up
+   as the seed instead of silently discarding it. Safe because it only
+   fires when the remote tables are completely empty. */
+async function finPushAllLocal(){
+  for(const a of S.finance.accounts) await sbInsertAccount(a);
+  for(const c of S.finance.categories) await sbInsertCategory(c);
+  for(const r of S.finance.recurring) await sbInsertRecurring(r);
+  for(const t of S.finance.transactions) await sbInsertTransaction(t);
+  for(const ym of Object.keys(S.finance.budgets)){
+    for(const catId of Object.keys(S.finance.budgets[ym])) await sbUpsertBudget(ym, catId, S.finance.budgets[ym][catId]);
+  }
+}
+function finApplyRemote(remote){
+  S.finance.accounts = remote.accounts;
+  S.finance.categories = remote.categories;
+  S.finance.transactions = remote.transactions;
+  S.finance.recurring = remote.recurring;
+  S.finance.budgets = remote.budgets;
+}
+async function finRefresh(force){
+  if(finSyncing) return;
+  if(!sbConfigured()) return;
+  finSyncing = true;
+  try{
+    const ok = await sbIsHost();
+    if(ok !== true){
+      finUnlocked = false;
+      if(force) toast(ok===false ? 'Host key rejected — check it in the Sync tab' : 'Could not verify the host key — check your connection');
+      return;
+    }
+    finUnlocked = true;
+    const remote = await sbFetchFinanceAll();
+    if(!remote) return;
+    const remoteEmpty = !remote.accounts.length && !remote.categories.length && !remote.transactions.length && !remote.recurring.length;
+    const localHasData = S.finance.accounts.length || S.finance.transactions.length || S.finance.recurring.length;
+    if(remoteEmpty && localHasData){
+      await finPushAllLocal();
+      if(force) toast('Uploaded your existing Finance data to Supabase');
+    } else {
+      finApplyRemote(remote);
+    }
+    save();
+    if(S.view==='finance') render();
+  }catch(e){ console.error('finance refresh failed', e); if(force) toast('Finance sync failed — see console'); }
+  finally{ finSyncing = false; }
+}
+let finPollTimer = null;
+function startFinPolling(){ stopFinPolling(); finPollTimer = setInterval(() => finRefresh(), 20000); }
+function stopFinPolling(){ if(finPollTimer){ clearInterval(finPollTimer); finPollTimer = null; } }
 
 /* Publish the host's scheduling config (event types + availability) to a
    single-row 'schedule_config' table, so a stranger's browser — which has
@@ -3417,15 +3522,18 @@ function openTransactionPopup(prefillDate){
     const accountId = document.getElementById('ftAccount').value;
     const date = document.getElementById('ftDate').value || todayISO();
     const note = document.getElementById('ftNote').value.trim();
+    let t;
     if(kind==='transfer'){
       const toAccountId = document.getElementById('ftToAccount').value;
       if(toAccountId===accountId){ toast('Pick two different accounts'); return; }
-      S.finance.transactions.push({id:uid(), accountId, toAccountId, categoryId:null, kind:'transfer', amount, date, note, recurringId:null});
+      t = {id:uid(), accountId, toAccountId, categoryId:null, kind:'transfer', amount, date, note, recurringId:null};
     } else {
       if(!selectedCat){ toast('Pick a category'); return; }
-      S.finance.transactions.push({id:uid(), accountId, categoryId:selectedCat, kind, amount, date, note, recurringId:null});
+      t = {id:uid(), accountId, categoryId:selectedCat, kind, amount, date, note, recurringId:null};
     }
+    S.finance.transactions.push(t);
     save(); closeFinPopup(); render(); toast('Transaction added');
+    sbInsertTransaction(t).catch(e => { console.error(e); S.finance.transactions = S.finance.transactions.filter(x=>x.id!==t.id); save(); render(); toast('Could not sync — check your connection'); });
   });
 }
 
@@ -3453,11 +3561,13 @@ function openAccountPopup(){
   document.getElementById('faSave').addEventListener('click', () => {
     const name = document.getElementById('faName').value.trim();
     if(!name){ toast('Give the account a name'); return; }
-    S.finance.accounts.push({
+    const a = {
       id:uid(), name, icon:document.getElementById('faIcon').value.trim()||'💳',
       color:document.getElementById('faColor').value, startBalance:Number(document.getElementById('faBalance').value)||0, archived:false
-    });
+    };
+    S.finance.accounts.push(a);
     save(); closeFinPopup(); render(); toast('Account created');
+    sbInsertAccount(a).catch(e => { console.error(e); S.finance.accounts = S.finance.accounts.filter(x=>x.id!==a.id); save(); render(); toast('Could not sync — check your connection'); });
   });
 }
 
@@ -3516,11 +3626,13 @@ function openRecurringPopup(){
     if(!title){ toast('Give it a title'); return; }
     if(!amount || amount<=0){ toast('Enter an amount'); return; }
     if(!selectedCat){ toast('Pick a category'); return; }
-    S.finance.recurring.push({
+    const r = {
       id:uid(), title, accountId:document.getElementById('frAccount').value, categoryId:selectedCat, kind, amount,
       startDate:document.getElementById('frStart').value||todayISO(), frequency:document.getElementById('frFrequency').value, active:true
-    });
+    };
+    S.finance.recurring.push(r);
     save(); closeFinPopup(); render(); toast('Recurring item created');
+    sbInsertRecurring(r).catch(e => { console.error(e); S.finance.recurring = S.finance.recurring.filter(x=>x.id!==r.id); save(); render(); toast('Could not sync — check your connection'); });
   });
 }
 
@@ -3708,6 +3820,17 @@ function wireDynamic(){
     sbDeleteSharedTask(id).catch(e => { console.error(e); toast('Could not sync — check your family key'); });
   }));
 
+  // finance — unlock
+  const btnUnlockFinance = document.getElementById('btnUnlockFinance');
+  if(btnUnlockFinance) btnUnlockFinance.addEventListener('click', async () => {
+    S.supabase.hostKey = document.getElementById('finHostKeyInput').value;
+    save();
+    btnUnlockFinance.disabled = true; btnUnlockFinance.textContent = 'Checking…';
+    await finRefresh(true);
+    btnUnlockFinance.disabled = false; btnUnlockFinance.textContent = 'Unlock Finance';
+    render();
+  });
+
   // finance — subtabs
   document.querySelectorAll('[data-finsub]').forEach(b => b.addEventListener('click', () => { S.finance.view = b.dataset.finsub; save(); render(); }));
 
@@ -3739,8 +3862,9 @@ function wireDynamic(){
   document.querySelectorAll('[data-finacctdel]').forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
     if(!confirm('Archive this account? Its past transactions are kept.')) return;
-    const a = S.finance.accounts.find(x=>x.id===b.dataset.finacctdel); if(a) a.archived = true;
-    save(); render();
+    const a = S.finance.accounts.find(x=>x.id===b.dataset.finacctdel); if(!a) return;
+    a.archived = true; save(); render();
+    sbUpdateAccount(a.id, {archived:true}).catch(e => { console.error(e); a.archived = false; save(); render(); toast('Could not sync — check your connection'); });
   }));
 
   // finance — transactions
@@ -3751,6 +3875,7 @@ function wireDynamic(){
     if(confirm(`Delete this ${t.kind} of $${t.amount.toFixed(2)}?`)){
       S.finance.transactions = S.finance.transactions.filter(x=>x.id!==t.id);
       save(); render(); toast('Transaction deleted');
+      sbDeleteTransaction(t.id).catch(e => { console.error(e); S.finance.transactions.push(t); save(); render(); toast('Could not sync the delete — check your connection'); });
     }
   }));
 
@@ -3760,25 +3885,33 @@ function wireDynamic(){
   document.querySelectorAll('[data-finpay]').forEach(b => b.addEventListener('click', () => {
     const r = S.finance.recurring.find(x=>x.id===b.dataset.finpay); if(!r) return;
     const date = finNextOccurrence(r); if(!date) return;
-    S.finance.transactions.push({id:uid(), accountId:r.accountId, categoryId:r.categoryId, kind:r.kind, amount:r.amount, date, note:'', recurringId:r.id});
+    const t = {id:uid(), accountId:r.accountId, categoryId:r.categoryId, kind:r.kind, amount:r.amount, date, note:'', recurringId:r.id};
+    S.finance.transactions.push(t);
     save(); render(); toast(`${r.title} marked paid for ${fmtDue(date)}`);
+    sbInsertTransaction(t).catch(e => { console.error(e); S.finance.transactions = S.finance.transactions.filter(x=>x.id!==t.id); save(); render(); toast('Could not sync — check your connection'); });
   }));
   document.querySelectorAll('[data-fintoggle]').forEach(b => b.addEventListener('click', () => {
     const r = S.finance.recurring.find(x=>x.id===b.dataset.fintoggle); if(!r) return;
     r.active = !r.active; save(); render();
+    sbUpdateRecurring(r.id, {active:r.active}).catch(e => { console.error(e); r.active = !r.active; save(); render(); toast('Could not sync — check your connection'); });
   }));
   document.querySelectorAll('[data-findelrec]').forEach(b => b.addEventListener('click', () => {
     if(!confirm('Delete this recurring item? Already-logged transactions are kept.')) return;
-    S.finance.recurring = S.finance.recurring.filter(x=>x.id!==b.dataset.findelrec);
+    const r = S.finance.recurring.find(x=>x.id===b.dataset.findelrec); if(!r) return;
+    S.finance.recurring = S.finance.recurring.filter(x=>x.id!==r.id);
     save(); render();
+    sbDeleteRecurring(r.id).catch(e => { console.error(e); S.finance.recurring.push(r); save(); render(); toast('Could not sync the delete — check your connection'); });
   }));
 
   // finance — budgets
   document.querySelectorAll('[data-finbudget]').forEach(inp => inp.addEventListener('change', () => {
     const ym = todayISO().slice(0,7);
+    const catId = inp.dataset.finbudget;
+    const amount = Number(inp.value)||0;
     if(!S.finance.budgets[ym]) S.finance.budgets[ym] = {};
-    S.finance.budgets[ym][inp.dataset.finbudget] = Number(inp.value)||0;
+    S.finance.budgets[ym][catId] = amount;
     save(); render();
+    sbUpsertBudget(ym, catId, amount).catch(e => { console.error(e); toast('Could not sync — check your connection'); });
   }));
 
   // sync view controls
