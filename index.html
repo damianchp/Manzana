@@ -575,6 +575,83 @@ body.ai-open #aiPanel{display:flex}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:600px){.grid2{grid-template-columns:1fr}}
 
+/* ---------- Finance tab ---------- */
+.fin-subtabs{display:flex;background:#eceff3;border-radius:99px;padding:3px;margin-bottom:16px;width:fit-content;flex-wrap:wrap}
+.fin-subtabs button{padding:7px 16px;border-radius:99px;font-size:.82rem;font-weight:600;color:var(--ink-soft)}
+.fin-subtabs button.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.fin-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.fin-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.fin-tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.fin-tile .fin-tile-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:4px}
+.fin-tile .fin-tile-val{font-family:'Sora';font-size:1.15rem;font-weight:700}
+.fin-tile.income .fin-tile-val{color:var(--sync)}
+.fin-tile.bills .fin-tile-val{color:var(--hi)}
+.fin-tile.low .fin-tile-val{color:var(--md)}
+.fin-month-block{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.fin-month-head{padding:12px 14px;border-bottom:1px solid var(--line);font-family:'Sora';font-weight:600;font-size:.92rem}
+.fin-cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.fin-cal-dow{font-size:.64rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);text-align:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.fin-cal-cell{min-height:64px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px;position:relative;min-width:0;overflow:hidden}
+.fin-cal-cell:nth-child(7n){border-right:none}
+.fin-cal-cell.other{background:#fafbfc;color:var(--ink-faint)}
+.fin-cal-cell.today-cell{background:#fbf3f2}
+.fin-cal-cell .daynum{font-size:.68rem;font-weight:600}
+.fin-item-chip{display:block;font-size:.62rem;font-weight:600;padding:1px 5px;border-radius:4px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;border:1px solid transparent}
+.fin-item-chip.expense{background:var(--hi-bg);color:var(--hi)}
+.fin-item-chip.income{background:var(--sync-bg);color:var(--sync)}
+.fin-item-chip.transfer{background:var(--lo-bg);color:var(--lo)}
+.fin-item-chip.projected{border-style:dashed;opacity:.75}
+.fin-proj-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.fin-proj-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:.8rem}
+.fin-proj-row .fin-proj-date{width:64px;flex-shrink:0;color:var(--ink-soft);font-weight:600}
+.fin-proj-row .fin-proj-bar-wrap{flex:1;height:8px;background:#eef1f5;border-radius:99px;overflow:hidden}
+.fin-proj-row .fin-proj-bar{height:100%;border-radius:99px;background:var(--sync)}
+.fin-proj-row.low .fin-proj-bar{background:var(--hi)}
+.fin-proj-row .fin-proj-amt{width:76px;text-align:right;font-weight:700;font-family:'Sora'}
+.fin-proj-row.low .fin-proj-amt{color:var(--hi)}
+.fin-acct-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:16px}
+.fin-acct-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.fin-acct-card .fin-acct-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.fin-acct-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+.fin-acct-card .fin-acct-name{font-weight:600;font-size:.92rem;flex:1}
+.fin-acct-card .fin-acct-bal{font-family:'Sora';font-size:1.3rem;font-weight:700}
+.fin-acct-new{border:1.5px dashed var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center;min-height:96px;color:var(--ink-faint);font-weight:600;font-size:.85rem;cursor:pointer}
+.fin-acct-new:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.fin-tx-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;margin-bottom:6px;cursor:pointer}
+.fin-tx-row:hover{box-shadow:var(--shadow);border-color:#d3dae3}
+.fin-tx-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+.fin-tx-row .fin-tx-main{flex:1;min-width:0}
+.fin-tx-row .fin-tx-title{font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fin-tx-row .fin-tx-sub{font-size:.74rem;color:var(--ink-faint)}
+.fin-tx-row .fin-tx-amt{font-family:'Sora';font-weight:700;font-size:.92rem;white-space:nowrap}
+.fin-tx-amt.expense{color:var(--hi)}
+.fin-tx-amt.income{color:var(--sync)}
+.fin-tx-amt.transfer{color:var(--lo)}
+.fin-rec-row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.fin-rec-row.inactive{opacity:.5}
+.fin-rec-row .fin-rec-main{flex:1;min-width:0}
+.fin-rec-row .fin-rec-title{font-weight:600;font-size:.9rem}
+.fin-rec-row .fin-rec-sub{font-size:.76rem;color:var(--ink-faint)}
+.fin-budget-row{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.fin-budget-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:.86rem}
+.fin-budget-top .fin-budget-name{font-weight:600;flex:1}
+.fin-budget-top input{width:90px;border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:.82rem;text-align:right}
+.fin-budget-bar-wrap{height:7px;background:#eef1f5;border-radius:99px;overflow:hidden}
+.fin-budget-bar{height:100%;border-radius:99px;background:var(--sync)}
+.fin-budget-bar.over{background:var(--hi)}
+.fin-budget-sub{font-size:.72rem;color:var(--ink-faint);margin-top:4px}
+.fin-popup-scrim{position:fixed;inset:0;background:rgba(20,26,33,.35);z-index:65;display:flex;align-items:center;justify-content:center;padding:20px}
+.fin-popup{background:var(--card);border-radius:14px;box-shadow:0 12px 40px rgba(29,39,51,.25);width:min(400px,92vw);padding:20px;max-height:88vh;overflow:auto}
+.fin-popup h3{font-family:'Sora';font-size:1rem;margin-bottom:14px}
+.fin-popup .field{margin-bottom:12px}
+.fin-popup .btn-row{margin-top:4px;justify-content:flex-end}
+.fin-kind-tabs{display:flex;background:#eceff3;border-radius:99px;padding:3px;margin-bottom:12px}
+.fin-kind-tabs button{flex:1;padding:7px 10px;border-radius:99px;font-size:.8rem;font-weight:600;color:var(--ink-soft)}
+.fin-kind-tabs button.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.fin-cat-picker{display:flex;flex-wrap:wrap;gap:6px}
+.fin-cat-pick{font-size:.76rem;font-weight:600;padding:5px 10px;border-radius:99px;border:1.4px solid var(--line);background:var(--card)}
+.fin-cat-pick.active{border-color:currentColor}
+
 /* ---------- Toast ---------- */
 #toast{
   position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);z-index:80;
@@ -613,6 +690,7 @@ body.ai-open #aiPanel{display:flex}
     <button data-view="board" role="tab">Board</button>
     <button data-view="calendar" role="tab">Calendar</button>
     <button data-view="book" role="tab">Book</button>
+    <button data-view="finance" role="tab">Finance</button>
     <button data-view="sync" role="tab">Sync<span class="badge" id="syncBadge">0</span></button>
   </div>
   <div class="spacer"></div>
@@ -904,7 +982,48 @@ function seedState(){
       {id:uid(), title:'Publish code samples to GitHub', project:'Work', priority:'low', start:null, due:null, section:'later', done:false, notes:''},
       {id:uid(), title:'Review website analytics', project:'Work', priority:null, start:null, due:null, section:'recent', done:false, notes:''},
       {id:uid(), title:'Send thank-you note after the workshop', project:'Community', priority:'medium', start:null, due:addDays(T,-1), section:'today', done:false, notes:''}
-    ]
+    ],
+    finance: seedFinance(T)
+  };
+}
+
+/* Finance seed — an account, a starter category set (Ivy-Wallet-style, icon
+   + color per category), a few past transactions, and a couple of
+   recurring bills/income so the Cash-Flow calendar isn't empty on first
+   load. Amounts loosely echo a typical "rent + subscription vs paycheck"
+   month so the low-point/checkpoint logic has something to show. */
+function seedFinance(T){
+  const accChecking = uid(), accCash = uid();
+  const catRent = uid(), catSubs = uid(), catGroceries = uid(), catTransport = uid(), catSalary = uid(), catOther = uid();
+  const monthStart = T.slice(0,8)+'01';
+  return {
+    view: 'cashflow',
+    cycleMonths: 1,           // 1 / 2 / 3 / 6 — monthly / bi-monthly / tri-monthly / semester
+    cycleStart: T.slice(0,7), // YYYY-MM anchor for the visible cycle window
+    accounts: [
+      {id:accChecking, name:'Checking', icon:'🏦', color:'#5a7dde', startBalance:1240, archived:false},
+      {id:accCash,     name:'Cash',     icon:'💵', color:'#12a594', startBalance:80,   archived:false}
+    ],
+    categories: [
+      {id:catRent,       name:'Rent',         icon:'🏠', color:'#e8384f', kind:'expense'},
+      {id:catSubs,       name:'Subscriptions', icon:'📺', color:'#7c4fd1', kind:'expense'},
+      {id:catGroceries,  name:'Groceries',    icon:'🛒', color:'#e08c00', kind:'expense'},
+      {id:catTransport,  name:'Transport',    icon:'🚗', color:'#0891b2', kind:'expense'},
+      {id:catOther,      name:'Other',        icon:'🔖', color:'#8a94a3', kind:'expense'},
+      {id:catSalary,     name:'Salary',       icon:'💼', color:'#12a594', kind:'income'}
+    ],
+    transactions: [
+      {id:uid(), accountId:accChecking, categoryId:catGroceries, kind:'expense', amount:64.2,  date:addDays(T,-3), note:'Weekly shop', recurringId:null},
+      {id:uid(), accountId:accCash,     categoryId:catTransport, kind:'expense', amount:18,    date:addDays(T,-2), note:'Metro card top-up', recurringId:null},
+      {id:uid(), accountId:accChecking, categoryId:catSalary,    kind:'income',  amount:2600,  date:addDays(monthStart,-3), note:'Prior paycheck', recurringId:null}
+    ],
+    recurring: [
+      {id:uid(), title:'Rent',    accountId:accChecking, categoryId:catRent, kind:'expense', amount:1800, startDate:monthStart,             frequency:'monthly', active:true},
+      {id:uid(), title:'Netflix', accountId:accChecking, categoryId:catSubs, kind:'expense', amount:17,   startDate:addDays(monthStart,4),  frequency:'monthly', active:true},
+      {id:uid(), title:'Spotify', accountId:accChecking, categoryId:catSubs, kind:'expense', amount:12,   startDate:addDays(monthStart,28), frequency:'monthly', active:true},
+      {id:uid(), title:'Paycheck',accountId:accChecking, categoryId:catSalary,kind:'income',  amount:2600, startDate:addDays(monthStart,13), frequency:'monthly', active:true}
+    ],
+    budgets: {}   // { 'YYYY-MM': { categoryId: targetAmount } } — envelope-style, filled in as you set targets
   };
 }
 
@@ -942,6 +1061,15 @@ async function init(){
   if(!S.sharedTasks) S.sharedTasks = [];
   if(S.myName===undefined) S.myName = '';
   if(S.familyKey===undefined) S.familyKey = '';
+  if(!S.finance) S.finance = seedFinance(todayISO());
+  if(!S.finance.accounts) S.finance.accounts = [];
+  if(!S.finance.categories) S.finance.categories = [];
+  if(!S.finance.transactions) S.finance.transactions = [];
+  if(!S.finance.recurring) S.finance.recurring = [];
+  if(!S.finance.budgets) S.finance.budgets = {};
+  if(!S.finance.view) S.finance.view = 'cashflow';
+  if(!S.finance.cycleMonths) S.finance.cycleMonths = 1;
+  if(!S.finance.cycleStart) S.finance.cycleStart = todayISO().slice(0,7);
   // A fresh browser (e.g. your wife's phone, first time) has no Supabase
   // config of its own. Fall back to the public creds baked into this file
   // (BUILD_SUPABASE) so the Shared tab and public booking page work without
@@ -1375,6 +1503,7 @@ function render(){
   else if(S.view==='board') m.innerHTML = renderBoard();
   else if(S.view==='calendar'){ m.innerHTML = renderCalendar(); maybePullRealEvents(); }
   else if(S.view==='book') m.innerHTML = renderBook();
+  else if(S.view==='finance') m.innerHTML = renderFinance();
   else m.innerHTML = renderSync();
   wireDynamic();
 }
@@ -1909,6 +2038,333 @@ function renderRoadmap(){
     </div>
     ${undatedCount ? `<div class="empty-note">${undatedCount} task${undatedCount===1?'':'s'} without a due date ${undatedCount===1?'isn\u2019t':'aren\u2019t'} shown here — add a due date in the task drawer to place ${undatedCount===1?'it':'them'} on the timeline.</div>` : ''}
   </div>`;
+}
+
+/* =====================================================================
+   FINANCE — a personal money tab pulling the best of three tools:
+   • Ivy Wallet: multiple accounts, icon+color categories, a fast
+     transaction quick-add (income/expense/transfer).
+   • Actual Budget: envelope-style monthly budgets (target vs spent per
+     category, rollover-aware progress bars).
+   • Firefly III: recurring bills/income as first-class objects that
+     project forward until you mark them paid.
+   The signature view is the Cash-Flow calendar: bills laid against
+   paydays over a customizable 1/2/3/6-month window, with a projected
+   running balance that calls out the low point — so you can see the
+   weeks where money gets tight before they happen.
+   ===================================================================== */
+
+function finCategory(id){ return S.finance.categories.find(c=>c.id===id) || null; }
+function finAccount(id){ return S.finance.accounts.find(a=>a.id===id) || null; }
+function finCatColor(cat){ return cat ? (cat.color || topicColor(cat.name)) : '#8a94a3'; }
+
+/* Live balance for one account: starting balance + every transaction that
+   touches it, dated on or before `asOfDate` (defaults to today — i.e. the
+   real, already-happened balance, not a projection). */
+function finAccountBalance(accountId, asOfDate){
+  const cutoff = asOfDate || todayISO();
+  const acc = finAccount(accountId);
+  if(!acc) return 0;
+  let bal = acc.startBalance;
+  S.finance.transactions.forEach(t => {
+    if(t.date > cutoff) return;
+    if(t.kind==='transfer'){
+      if(t.accountId===accountId) bal -= t.amount;
+      if(t.toAccountId===accountId) bal += t.amount;
+    } else if(t.accountId===accountId){
+      bal += (t.kind==='income' ? t.amount : -t.amount);
+    }
+  });
+  return bal;
+}
+/* Combined balance across all non-archived accounts — the single number
+   the Cash-Flow calendar tracks, same simplified mental model as the
+   reference screenshot (one running total, not per-account). */
+function finCombinedBalance(asOfDate){
+  return S.finance.accounts.filter(a=>!a.archived).reduce((s,a)=>s+finAccountBalance(a.id, asOfDate), 0);
+}
+function finNetWorth(){ return finCombinedBalance(todayISO()); }
+
+/* Every occurrence date of a recurring rule inside [rangeStart, rangeEndIncl]. */
+function finRecurringOccurrences(rule, rangeStart, rangeEndIncl){
+  const out = [];
+  let d = rule.startDate;
+  let guard = 0;
+  while(d <= rangeEndIncl && guard < 2000){
+    if(d >= rangeStart) out.push(d);
+    d = rule.frequency==='weekly' ? addDays(d,7) : addMonths(d,1);
+    guard++;
+  }
+  return out;
+}
+/* The next not-yet-logged occurrence of a rule, today or later. A rule
+   counts as "logged" for a date once a transaction with that recurringId
+   exists on that exact date (created via the "Mark paid" button). */
+function finNextOccurrence(rule){
+  const today = todayISO();
+  const logged = new Set(S.finance.transactions.filter(t=>t.recurringId===rule.id).map(t=>t.date));
+  let d = rule.startDate;
+  let guard = 0;
+  while(guard < 2000){
+    if(d >= today && !logged.has(d)) return d;
+    d = rule.frequency==='weekly' ? addDays(d,7) : addMonths(d,1);
+    guard++;
+  }
+  return null;
+}
+/* All items (actual + projected) landing on one day, for calendar chips.
+   Past/today actual transactions always show. Future recurring occurrences
+   show as "projected" unless already logged for that exact date. */
+function finItemsForDay(dateISO, recurringByDate){
+  const items = S.finance.transactions.filter(t=>t.date===dateISO)
+    .map(t => ({ id:t.id, kind:t.kind, amount:t.amount, label:(finCategory(t.categoryId)||{}).name || t.note || 'Transaction', actual:true }));
+  if(dateISO >= todayISO()){
+    const logged = new Set(S.finance.transactions.filter(t=>t.recurringId).map(t=>t.recurringId+'|'+t.date));
+    (recurringByDate[dateISO]||[]).forEach(r => {
+      if(!logged.has(r.id+'|'+dateISO)) items.push({ id:'proj-'+r.id+dateISO, kind:r.kind, amount:r.amount, label:r.title, actual:false, recurringId:r.id });
+    });
+  }
+  return items;
+}
+/* Precompute a date → [recurring rules occurring that day] lookup once for
+   a whole visible range, instead of re-walking every rule per calendar cell. */
+function finRecurringByDateInRange(rangeStart, rangeEndIncl){
+  const map = {};
+  S.finance.recurring.filter(r=>r.active).forEach(r => {
+    finRecurringOccurrences(r, rangeStart, rangeEndIncl).forEach(d => { (map[d] || (map[d]=[])).push(r); });
+  });
+  return map;
+}
+
+const FIN_CYCLE_LABEL = {1:'Monthly', 2:'Bi-monthly', 3:'Tri-monthly', 6:'Semester'};
+
+function renderFinance(){
+  const sub = `<div class="fin-subtabs">
+    <button data-finsub="cashflow" class="${S.finance.view==='cashflow'?'active':''}">Cash-Flow</button>
+    <button data-finsub="accounts" class="${S.finance.view==='accounts'?'active':''}">Accounts</button>
+    <button data-finsub="transactions" class="${S.finance.view==='transactions'?'active':''}">Transactions</button>
+    <button data-finsub="recurring" class="${S.finance.view==='recurring'?'active':''}">Recurring</button>
+    <button data-finsub="budgets" class="${S.finance.view==='budgets'?'active':''}">Budgets</button>
+  </div>`;
+  if(S.finance.view==='accounts') return sub + renderFinanceAccounts();
+  if(S.finance.view==='transactions') return sub + renderFinanceTransactions();
+  if(S.finance.view==='recurring') return sub + renderFinanceRecurring();
+  if(S.finance.view==='budgets') return sub + renderFinanceBudgets();
+  return sub + renderFinanceCashflow();
+}
+
+/* ---------- Cash-Flow calendar (the hero view) ---------- */
+function renderFinanceCashflow(){
+  const fin = S.finance;
+  const cycleStartDate = fin.cycleStart+'-01';
+  const cycleEndDate = addDays(monthAdd(fin.cycleStart, fin.cycleMonths)+'-01', -1);
+  const recurringByDate = finRecurringByDateInRange(cycleStartDate, cycleEndDate);
+  const T = todayISO();
+
+  // Summary tiles: income / bills(expenses) / net across the whole visible cycle
+  let income = 0, bills = 0;
+  let d = cycleStartDate;
+  while(d <= cycleEndDate){
+    finItemsForDay(d, recurringByDate).forEach(it => { if(it.kind==='income') income += it.amount; else if(it.kind==='expense') bills += it.amount; });
+    d = addDays(d,1);
+  }
+  const net = income - bills;
+
+  // Day-by-day projected balance across the cycle, tracking the low point
+  const startingBalance = finCombinedBalance(addDays(cycleStartDate,-1));
+  let running = startingBalance;
+  const series = [];
+  d = cycleStartDate;
+  while(d <= cycleEndDate){
+    const dayItems = finItemsForDay(d, recurringByDate);
+    dayItems.forEach(it => {
+      if(it.kind==='income') running += it.amount;
+      else if(it.kind==='expense') running -= it.amount;
+    });
+    series.push({ date:d, balance:running, hasIncome:dayItems.some(i=>i.kind==='income'), hasItems:dayItems.length>0 });
+    d = addDays(d,1);
+  }
+  const low = series.reduce((m,s)=> (!m||s.balance<m.balance)?s:m, null);
+
+  // Checkpoint rows for the projected-balance list: cycle start, each payday, and the low point
+  const checkpoints = [{date:addDays(cycleStartDate,-1), balance:startingBalance, label:'Start'}];
+  series.filter(s=>s.hasIncome).forEach(s => checkpoints.push({date:s.date, balance:s.balance}));
+  if(low && !checkpoints.some(c=>c.date===low.date)) checkpoints.push({date:low.date, balance:low.balance, isLow:true});
+  checkpoints.sort((a,b)=>a.date.localeCompare(b.date));
+  const maxAbs = Math.max(1, ...checkpoints.map(c=>Math.abs(c.balance)));
+
+  const cycleBtns = [1,2,3,6].map(n => `<button data-fincycle="${n}" class="${fin.cycleMonths===n?'active':''}">${FIN_CYCLE_LABEL[n]}</button>`).join('');
+
+  const monthsHtml = [];
+  for(let i=0;i<fin.cycleMonths;i++){
+    monthsHtml.push(renderFinanceMonthBlock(monthAdd(fin.cycleStart,i), recurringByDate, T));
+  }
+
+  const projRows = checkpoints.map(c => {
+    const pct = Math.max(4, Math.abs(c.balance)/maxAbs*100);
+    return `<div class="fin-proj-row ${c.isLow?'low':''}">
+      <span class="fin-proj-date">${c.label||fmtDue(c.date)}</span>
+      <span class="fin-proj-bar-wrap"><span class="fin-proj-bar" style="width:${pct}%"></span></span>
+      <span class="fin-proj-amt">${c.balance<0?'-':''}$${Math.abs(c.balance).toFixed(0)}</span>
+    </div>`;
+  }).join('');
+
+  return `<div>
+    <div class="fin-toolbar">
+      <div class="fin-subtabs" id="finCycleTabs" style="margin-bottom:0">${cycleBtns}</div>
+      <div class="spacer"></div>
+      <button class="cal-nav" data-fincyclenav="-1" aria-label="Earlier">‹</button>
+      <button class="chip-btn" id="finTodayBtn" style="background:#eef0f4;color:var(--ink)">Today</button>
+      <button class="cal-nav" data-fincyclenav="1" aria-label="Later">›</button>
+    </div>
+    <div class="fin-tiles">
+      <div class="fin-tile income"><div class="fin-tile-label">Income</div><div class="fin-tile-val">$${income.toFixed(0)}</div></div>
+      <div class="fin-tile bills"><div class="fin-tile-label">Bills</div><div class="fin-tile-val">$${bills.toFixed(0)}</div></div>
+      <div class="fin-tile"><div class="fin-tile-label">Net</div><div class="fin-tile-val">${net<0?'-':''}$${Math.abs(net).toFixed(0)}</div></div>
+      <div class="fin-tile low"><div class="fin-tile-label">Low point</div><div class="fin-tile-val">${low.balance<0?'-':''}$${Math.abs(low.balance).toFixed(0)}</div></div>
+    </div>
+    ${monthsHtml.join('')}
+    <div class="fin-proj-card">
+      <h3 style="font-family:'Sora';font-size:.9rem;margin-bottom:12px">Projected balance</h3>
+      ${projRows}
+    </div>
+  </div>`;
+}
+
+function renderFinanceMonthBlock(ym, recurringByDate, T){
+  const [y,m] = ym.split('-').map(Number);
+  const first = new Date(y, m-1, 1);
+  const startDow = (first.getDay()+6)%7;
+  const daysIn = new Date(y, m, 0).getDate();
+  const prevDays = new Date(y, m-1, 0).getDate();
+  const cells = [];
+  for(let i=startDow-1;i>=0;i--) cells.push({d:prevDays-i, other:true, iso:iso(new Date(y,m-2,prevDays-i))});
+  for(let dnum=1;dnum<=daysIn;dnum++) cells.push({d:dnum, other:false, iso:iso(new Date(y,m-1,dnum))});
+  while(cells.length%7) cells.push({d:cells.length, other:true, iso:iso(new Date(y,m,cells.length-daysIn-startDow+1))});
+  const monthName = first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+
+  return `<div class="fin-month-block">
+    <div class="fin-month-head">${monthName}</div>
+    <div class="fin-cal-grid">
+      ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="fin-cal-dow">${d}</div>`).join('')}
+      ${cells.map(c => {
+        const items = finItemsForDay(c.iso, recurringByDate);
+        return `<div class="fin-cal-cell ${c.other?'other':''} ${c.iso===T?'today-cell':''}" data-findate="${c.iso}">
+          <span class="daynum">${c.d}</span>
+          ${items.map(it => `<button class="fin-item-chip ${it.kind} ${it.actual?'':'projected'}" data-fintxid="${it.actual?it.id:''}" data-finrecid="${it.recurringId||''}" title="${esc(it.label)} · $${it.amount.toFixed(2)}${it.actual?'':' (projected)'}">${esc(it.label)} $${it.amount.toFixed(0)}</button>`).join('')}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---------- Accounts ---------- */
+function renderFinanceAccounts(){
+  const cards = S.finance.accounts.filter(a=>!a.archived).map(a => {
+    const bal = finAccountBalance(a.id);
+    return `<div class="fin-acct-card" data-finacct="${a.id}">
+      <div class="fin-acct-top">
+        <span class="fin-acct-icon" style="background:${a.color}22;color:${a.color}">${esc(a.icon||'💳')}</span>
+        <span class="fin-acct-name">${esc(a.name)}</span>
+        <button class="icon-btn" data-finacctdel="${a.id}" title="Archive account" style="width:26px;height:26px">✕</button>
+      </div>
+      <div class="fin-acct-bal" style="color:${bal<0?'var(--hi)':'var(--ink)'}">${bal<0?'-':''}$${Math.abs(bal).toFixed(2)}</div>
+    </div>`;
+  }).join('');
+  return `<div class="fin-acct-grid">
+    ${cards}
+    <div class="fin-acct-new" id="btnNewAccount">+ New account</div>
+  </div>
+  <div class="fin-tile" style="max-width:260px">
+    <div class="fin-tile-label">Combined net worth</div>
+    <div class="fin-tile-val">${finNetWorth()<0?'-':''}$${Math.abs(finNetWorth()).toFixed(2)}</div>
+  </div>`;
+}
+
+/* ---------- Transactions ---------- */
+function renderFinanceTransactions(){
+  const rows = S.finance.transactions.slice().sort((a,b)=> b.date.localeCompare(a.date)).map(t => {
+    const cat = finCategory(t.categoryId);
+    const acc = finAccount(t.accountId);
+    const color = finCatColor(cat);
+    const sign = t.kind==='expense' ? '-' : t.kind==='income' ? '+' : '';
+    return `<div class="fin-tx-row" data-fintx="${t.id}">
+      <span class="fin-tx-icon" style="background:${color}22;color:${color}">${esc(cat?cat.icon:(t.kind==='transfer'?'↔':'💳'))}</span>
+      <div class="fin-tx-main">
+        <div class="fin-tx-title">${esc(cat?cat.name:(t.note||'Transaction'))}</div>
+        <div class="fin-tx-sub">${esc(acc?acc.name:'')}${t.note && cat ? ' · '+esc(t.note) : ''} · ${fmtDue(t.date)}</div>
+      </div>
+      <span class="fin-tx-amt ${t.kind}">${sign}$${t.amount.toFixed(2)}</span>
+    </div>`;
+  }).join('') || `<div class="empty-note">No transactions yet — add one below.</div>`;
+
+  return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn accent" id="btnNewTx">+ Add transaction</button>
+    </div>
+    ${rows}`;
+}
+
+/* ---------- Recurring bills / income ---------- */
+function renderFinanceRecurring(){
+  const rows = S.finance.recurring.map(r => {
+    const cat = finCategory(r.categoryId);
+    const acc = finAccount(r.accountId);
+    const next = finNextOccurrence(r);
+    const color = finCatColor(cat);
+    return `<div class="fin-rec-row ${r.active?'':'inactive'}">
+      <span class="fin-acct-icon" style="background:${color}22;color:${color}">${esc(cat?cat.icon:'🔁')}</span>
+      <div class="fin-rec-main">
+        <div class="fin-rec-title">${esc(r.title)} <span style="color:var(--ink-faint);font-weight:500">· ${r.frequency}</span></div>
+        <div class="fin-rec-sub">${esc(acc?acc.name:'')} · ${r.kind==='expense'?'-':'+'}$${r.amount.toFixed(2)}${next?` · next ${fmtDue(next)}`:' · fully logged'}</div>
+      </div>
+      ${next?`<button class="btn primary" data-finpay="${r.id}" style="padding:7px 12px;font-size:.78rem">Mark paid</button>`:''}
+      <button class="btn ghost" data-fintoggle="${r.id}" style="padding:7px 12px;font-size:.78rem">${r.active?'Pause':'Resume'}</button>
+      <button class="btn danger" data-findelrec="${r.id}" style="padding:7px 12px;font-size:.78rem">Delete</button>
+    </div>`;
+  }).join('') || `<div class="empty-note">No recurring bills or income yet — add one below.</div>`;
+
+  return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn accent" id="btnNewRecurring">+ Add recurring</button>
+    </div>
+    ${rows}`;
+}
+
+/* ---------- Budgets (Actual-Budget-style envelopes, per calendar month) ---------- */
+function renderFinanceBudgets(){
+  const ym = todayISO().slice(0,7);
+  const monthStart = ym+'-01';
+  const monthEnd = addDays(monthAdd(ym,1)+'-01', -1);
+  const targets = S.finance.budgets[ym] || {};
+  const expenseCats = S.finance.categories.filter(c=>c.kind==='expense');
+
+  const rows = expenseCats.map(cat => {
+    const spent = S.finance.transactions
+      .filter(t=>t.kind==='expense' && t.categoryId===cat.id && t.date>=monthStart && t.date<=monthEnd)
+      .reduce((s,t)=>s+t.amount,0);
+    const budget = targets[cat.id] || 0;
+    const pct = budget>0 ? Math.min(100, spent/budget*100) : (spent>0?100:0);
+    const over = budget>0 && spent>budget;
+    const color = finCatColor(cat);
+    return `<div class="fin-budget-row">
+      <div class="fin-budget-top">
+        <span class="topic-dot" style="background:${color}"></span>
+        <span class="fin-budget-name">${esc(cat.name)}</span>
+        <input type="number" min="0" step="1" data-finbudget="${cat.id}" value="${budget||''}" placeholder="0">
+      </div>
+      <div class="fin-budget-bar-wrap"><div class="fin-budget-bar ${over?'over':''}" style="width:${pct}%"></div></div>
+      <div class="fin-budget-sub">$${spent.toFixed(0)} spent${budget>0?` of $${budget.toFixed(0)}`:''}${over?' — over budget':''}</div>
+    </div>`;
+  }).join('') || `<div class="empty-note">Add an expense category first (via a transaction or recurring bill) to budget against it.</div>`;
+
+  const totalBudget = Object.values(targets).reduce((s,v)=>s+Number(v||0),0);
+  const totalSpent = expenseCats.reduce((s,cat)=> s + S.finance.transactions.filter(t=>t.kind==='expense' && t.categoryId===cat.id && t.date>=monthStart && t.date<=monthEnd).reduce((s2,t)=>s2+t.amount,0), 0);
+
+  return `<div class="fin-tiles">
+      <div class="fin-tile"><div class="fin-tile-label">Budgeted this month</div><div class="fin-tile-val">$${totalBudget.toFixed(0)}</div></div>
+      <div class="fin-tile bills"><div class="fin-tile-label">Spent this month</div><div class="fin-tile-val">$${totalSpent.toFixed(0)}</div></div>
+      <div class="fin-tile ${totalBudget-totalSpent<0?'bills':'income'}"><div class="fin-tile-label">Remaining</div><div class="fin-tile-val">$${(totalBudget-totalSpent).toFixed(0)}</div></div>
+    </div>
+    ${rows}`;
 }
 
 function renderSync(){
@@ -2896,6 +3352,178 @@ function closeTaskDrawPopup(){
   if(el) el.remove();
 }
 
+/* ---------- Finance popups ---------- */
+function closeFinPopup(){
+  const el = document.getElementById('finPopupScrim');
+  if(el) el.remove();
+}
+function finExpenseCats(){ return S.finance.categories.filter(c=>c.kind==='expense'); }
+function finIncomeCats(){ return S.finance.categories.filter(c=>c.kind==='income'); }
+
+/* Add/edit transaction — Ivy-Wallet-style quick add: kind tabs, amount,
+   account (+ a second account for transfers), category picker, date, note. */
+function openTransactionPopup(prefillDate){
+  closeFinPopup();
+  let kind = 'expense';
+  const scrim = document.createElement('div');
+  scrim.className = 'fin-popup-scrim';
+  scrim.id = 'finPopupScrim';
+  const accOptions = S.finance.accounts.filter(a=>!a.archived).map(a=>`<option value="${a.id}">${esc(a.icon)} ${esc(a.name)}</option>`).join('');
+  const renderCats = () => (kind==='income'?finIncomeCats():finExpenseCats())
+    .map(c=>`<button type="button" class="fin-cat-pick" data-fincat="${c.id}" style="color:${finCatColor(c)}">${esc(c.icon)} ${esc(c.name)}</button>`).join('') || '<span class="empty-note">No categories yet</span>';
+  scrim.innerHTML = `<div class="fin-popup">
+    <h3>New transaction</h3>
+    <div class="fin-kind-tabs" id="finKindTabs">
+      <button type="button" data-finkind="expense" class="active">Expense</button>
+      <button type="button" data-finkind="income">Income</button>
+      <button type="button" data-finkind="transfer">Transfer</button>
+    </div>
+    <div class="field"><label>Amount</label><input id="ftAmount" type="number" min="0" step="0.01" placeholder="0.00"></div>
+    <div class="field" id="ftAccountField"><label>Account</label><select id="ftAccount">${accOptions}</select></div>
+    <div class="field" id="ftToAccountField" style="display:none"><label>To account</label><select id="ftToAccount">${accOptions}</select></div>
+    <div class="field" id="ftCatField"><label>Category</label><div class="fin-cat-picker" id="ftCatPicker">${renderCats()}</div></div>
+    <div class="field"><label>Date</label><input id="ftDate" type="date" value="${prefillDate||todayISO()}"></div>
+    <div class="field"><label>Note</label><input id="ftNote" type="text" placeholder="Optional"></div>
+    <div class="btn-row">
+      <button class="btn ghost" id="ftCancel">Cancel</button>
+      <button class="btn accent" id="ftSave">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(scrim);
+  scrim.addEventListener('click', e => { if(e.target===scrim) closeFinPopup(); });
+  document.getElementById('ftCancel').addEventListener('click', closeFinPopup);
+
+  let selectedCat = null;
+  function wireCatPicker(){
+    document.querySelectorAll('#ftCatPicker [data-fincat]').forEach(b => b.addEventListener('click', () => {
+      selectedCat = b.dataset.fincat;
+      document.querySelectorAll('#ftCatPicker [data-fincat]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    }));
+  }
+  wireCatPicker();
+
+  document.querySelectorAll('#finKindTabs [data-finkind]').forEach(b => b.addEventListener('click', () => {
+    kind = b.dataset.finkind;
+    document.querySelectorAll('#finKindTabs button').forEach(x=>x.classList.toggle('active', x===b));
+    document.getElementById('ftToAccountField').style.display = kind==='transfer' ? '' : 'none';
+    document.getElementById('ftCatField').style.display = kind==='transfer' ? 'none' : '';
+    if(kind!=='transfer'){ document.getElementById('ftCatPicker').innerHTML = renderCats(); selectedCat = null; wireCatPicker(); }
+  }));
+
+  document.getElementById('ftSave').addEventListener('click', () => {
+    const amount = Number(document.getElementById('ftAmount').value);
+    if(!amount || amount<=0){ toast('Enter an amount'); return; }
+    const accountId = document.getElementById('ftAccount').value;
+    const date = document.getElementById('ftDate').value || todayISO();
+    const note = document.getElementById('ftNote').value.trim();
+    if(kind==='transfer'){
+      const toAccountId = document.getElementById('ftToAccount').value;
+      if(toAccountId===accountId){ toast('Pick two different accounts'); return; }
+      S.finance.transactions.push({id:uid(), accountId, toAccountId, categoryId:null, kind:'transfer', amount, date, note, recurringId:null});
+    } else {
+      if(!selectedCat){ toast('Pick a category'); return; }
+      S.finance.transactions.push({id:uid(), accountId, categoryId:selectedCat, kind, amount, date, note, recurringId:null});
+    }
+    save(); closeFinPopup(); render(); toast('Transaction added');
+  });
+}
+
+function openAccountPopup(){
+  closeFinPopup();
+  const scrim = document.createElement('div');
+  scrim.className = 'fin-popup-scrim';
+  scrim.id = 'finPopupScrim';
+  scrim.innerHTML = `<div class="fin-popup">
+    <h3>New account</h3>
+    <div class="field"><label>Name</label><input id="faName" type="text" placeholder="e.g. Savings"></div>
+    <div class="grid2">
+      <div class="field"><label>Icon (emoji)</label><input id="faIcon" type="text" value="💳" maxlength="4"></div>
+      <div class="field"><label>Color</label><input id="faColor" type="color" value="#5a7dde" style="height:38px;padding:2px"></div>
+    </div>
+    <div class="field"><label>Starting balance</label><input id="faBalance" type="number" step="0.01" value="0"></div>
+    <div class="btn-row">
+      <button class="btn ghost" id="faCancel">Cancel</button>
+      <button class="btn accent" id="faSave">Create account</button>
+    </div>
+  </div>`;
+  document.body.appendChild(scrim);
+  scrim.addEventListener('click', e => { if(e.target===scrim) closeFinPopup(); });
+  document.getElementById('faCancel').addEventListener('click', closeFinPopup);
+  document.getElementById('faSave').addEventListener('click', () => {
+    const name = document.getElementById('faName').value.trim();
+    if(!name){ toast('Give the account a name'); return; }
+    S.finance.accounts.push({
+      id:uid(), name, icon:document.getElementById('faIcon').value.trim()||'💳',
+      color:document.getElementById('faColor').value, startBalance:Number(document.getElementById('faBalance').value)||0, archived:false
+    });
+    save(); closeFinPopup(); render(); toast('Account created');
+  });
+}
+
+function openRecurringPopup(){
+  closeFinPopup();
+  let kind = 'expense';
+  const scrim = document.createElement('div');
+  scrim.className = 'fin-popup-scrim';
+  scrim.id = 'finPopupScrim';
+  const accOptions = S.finance.accounts.filter(a=>!a.archived).map(a=>`<option value="${a.id}">${esc(a.icon)} ${esc(a.name)}</option>`).join('');
+  const renderCats = () => (kind==='income'?finIncomeCats():finExpenseCats())
+    .map(c=>`<button type="button" class="fin-cat-pick" data-fincat="${c.id}" style="color:${finCatColor(c)}">${esc(c.icon)} ${esc(c.name)}</button>`).join('') || '<span class="empty-note">No categories yet</span>';
+  scrim.innerHTML = `<div class="fin-popup">
+    <h3>New recurring bill / income</h3>
+    <div class="field"><label>Title</label><input id="frTitle" type="text" placeholder="e.g. Rent"></div>
+    <div class="fin-kind-tabs" id="finRecKindTabs">
+      <button type="button" data-finkind="expense" class="active">Expense</button>
+      <button type="button" data-finkind="income">Income</button>
+    </div>
+    <div class="field"><label>Amount</label><input id="frAmount" type="number" min="0" step="0.01" placeholder="0.00"></div>
+    <div class="field"><label>Account</label><select id="frAccount">${accOptions}</select></div>
+    <div class="field"><label>Category</label><div class="fin-cat-picker" id="frCatPicker">${renderCats()}</div></div>
+    <div class="grid2">
+      <div class="field"><label>Frequency</label>
+        <select id="frFrequency"><option value="monthly">Monthly</option><option value="weekly">Weekly</option></select>
+      </div>
+      <div class="field"><label>Starts</label><input id="frStart" type="date" value="${todayISO()}"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn ghost" id="frCancel">Cancel</button>
+      <button class="btn accent" id="frSave">Create</button>
+    </div>
+  </div>`;
+  document.body.appendChild(scrim);
+  scrim.addEventListener('click', e => { if(e.target===scrim) closeFinPopup(); });
+  document.getElementById('frCancel').addEventListener('click', closeFinPopup);
+
+  let selectedCat = null;
+  function wireCatPicker(){
+    document.querySelectorAll('#frCatPicker [data-fincat]').forEach(b => b.addEventListener('click', () => {
+      selectedCat = b.dataset.fincat;
+      document.querySelectorAll('#frCatPicker [data-fincat]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    }));
+  }
+  wireCatPicker();
+  document.querySelectorAll('#finRecKindTabs [data-finkind]').forEach(b => b.addEventListener('click', () => {
+    kind = b.dataset.finkind;
+    document.querySelectorAll('#finRecKindTabs button').forEach(x=>x.classList.toggle('active', x===b));
+    document.getElementById('frCatPicker').innerHTML = renderCats(); selectedCat = null; wireCatPicker();
+  }));
+
+  document.getElementById('frSave').addEventListener('click', () => {
+    const title = document.getElementById('frTitle').value.trim();
+    const amount = Number(document.getElementById('frAmount').value);
+    if(!title){ toast('Give it a title'); return; }
+    if(!amount || amount<=0){ toast('Enter an amount'); return; }
+    if(!selectedCat){ toast('Pick a category'); return; }
+    S.finance.recurring.push({
+      id:uid(), title, accountId:document.getElementById('frAccount').value, categoryId:selectedCat, kind, amount,
+      startDate:document.getElementById('frStart').value||todayISO(), frequency:document.getElementById('frFrequency').value, active:true
+    });
+    save(); closeFinPopup(); render(); toast('Recurring item created');
+  });
+}
+
 function wireDynamic(){
   // open drawer / complete
   document.querySelectorAll('.task-row').forEach(r => {
@@ -3078,6 +3706,79 @@ function wireDynamic(){
     S.sharedTasks = S.sharedTasks.filter(x=>x.id!==id);
     render();
     sbDeleteSharedTask(id).catch(e => { console.error(e); toast('Could not sync — check your family key'); });
+  }));
+
+  // finance — subtabs
+  document.querySelectorAll('[data-finsub]').forEach(b => b.addEventListener('click', () => { S.finance.view = b.dataset.finsub; save(); render(); }));
+
+  // finance — cash-flow cycle controls
+  document.querySelectorAll('[data-fincycle]').forEach(b => b.addEventListener('click', () => { S.finance.cycleMonths = Number(b.dataset.fincycle); save(); render(); }));
+  document.querySelectorAll('[data-fincyclenav]').forEach(b => b.addEventListener('click', () => { S.finance.cycleStart = monthAdd(S.finance.cycleStart, Number(b.dataset.fincyclenav)); save(); render(); }));
+  const finTodayBtn = document.getElementById('finTodayBtn');
+  if(finTodayBtn) finTodayBtn.addEventListener('click', () => { S.finance.cycleStart = todayISO().slice(0,7); save(); render(); });
+
+  // finance — cash-flow calendar chips (view details) + click empty day to add a transaction
+  document.querySelectorAll('.fin-item-chip').forEach(chip => chip.addEventListener('click', e => {
+    e.stopPropagation();
+    const txId = chip.dataset.fintxid;
+    if(txId){
+      const t = S.finance.transactions.find(x=>x.id===txId); if(!t) return;
+      const cat = finCategory(t.categoryId);
+      toast(`${cat?cat.name:(t.note||'Transaction')} · ${t.kind==='expense'?'-':'+'}$${t.amount.toFixed(2)} · ${fmtDue(t.date)}`);
+    } else {
+      const recId = chip.dataset.finrecid;
+      const r = S.finance.recurring.find(x=>x.id===recId);
+      if(r) toast(`${r.title} (projected) · ${r.kind==='expense'?'-':'+'}$${r.amount.toFixed(2)}`);
+    }
+  }));
+  document.querySelectorAll('.fin-cal-cell').forEach(cell => cell.addEventListener('click', () => openTransactionPopup(cell.dataset.findate)));
+
+  // finance — accounts
+  const btnNewAccount = document.getElementById('btnNewAccount');
+  if(btnNewAccount) btnNewAccount.addEventListener('click', openAccountPopup);
+  document.querySelectorAll('[data-finacctdel]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    if(!confirm('Archive this account? Its past transactions are kept.')) return;
+    const a = S.finance.accounts.find(x=>x.id===b.dataset.finacctdel); if(a) a.archived = true;
+    save(); render();
+  }));
+
+  // finance — transactions
+  const btnNewTx = document.getElementById('btnNewTx');
+  if(btnNewTx) btnNewTx.addEventListener('click', () => openTransactionPopup());
+  document.querySelectorAll('[data-fintx]').forEach(row => row.addEventListener('click', () => {
+    const t = S.finance.transactions.find(x=>x.id===row.dataset.fintx); if(!t) return;
+    if(confirm(`Delete this ${t.kind} of $${t.amount.toFixed(2)}?`)){
+      S.finance.transactions = S.finance.transactions.filter(x=>x.id!==t.id);
+      save(); render(); toast('Transaction deleted');
+    }
+  }));
+
+  // finance — recurring
+  const btnNewRecurring = document.getElementById('btnNewRecurring');
+  if(btnNewRecurring) btnNewRecurring.addEventListener('click', openRecurringPopup);
+  document.querySelectorAll('[data-finpay]').forEach(b => b.addEventListener('click', () => {
+    const r = S.finance.recurring.find(x=>x.id===b.dataset.finpay); if(!r) return;
+    const date = finNextOccurrence(r); if(!date) return;
+    S.finance.transactions.push({id:uid(), accountId:r.accountId, categoryId:r.categoryId, kind:r.kind, amount:r.amount, date, note:'', recurringId:r.id});
+    save(); render(); toast(`${r.title} marked paid for ${fmtDue(date)}`);
+  }));
+  document.querySelectorAll('[data-fintoggle]').forEach(b => b.addEventListener('click', () => {
+    const r = S.finance.recurring.find(x=>x.id===b.dataset.fintoggle); if(!r) return;
+    r.active = !r.active; save(); render();
+  }));
+  document.querySelectorAll('[data-findelrec]').forEach(b => b.addEventListener('click', () => {
+    if(!confirm('Delete this recurring item? Already-logged transactions are kept.')) return;
+    S.finance.recurring = S.finance.recurring.filter(x=>x.id!==b.dataset.findelrec);
+    save(); render();
+  }));
+
+  // finance — budgets
+  document.querySelectorAll('[data-finbudget]').forEach(inp => inp.addEventListener('change', () => {
+    const ym = todayISO().slice(0,7);
+    if(!S.finance.budgets[ym]) S.finance.budgets[ym] = {};
+    S.finance.budgets[ym][inp.dataset.finbudget] = Number(inp.value)||0;
+    save(); render();
   }));
 
   // sync view controls
@@ -3370,6 +4071,7 @@ function refreshBackground(){
   else if(S.view==='table') m.innerHTML = renderTable();
   else if(S.view==='board') m.innerHTML = renderBoard();
   else if(S.view==='calendar') m.innerHTML = renderCalendar();
+  else if(S.view==='finance') m.innerHTML = renderFinance();
   else m.innerHTML = renderSync();
   wireDynamic();
 }
