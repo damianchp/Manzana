@@ -651,6 +651,7 @@ body.ai-open #aiPanel{display:flex}
 .fin-cat-picker{display:flex;flex-wrap:wrap;gap:6px}
 .fin-cat-pick{font-size:.76rem;font-weight:600;padding:5px 10px;border-radius:99px;border:1.4px solid var(--line);background:var(--card)}
 .fin-cat-pick.active{border-color:currentColor}
+.fin-cat-pick[data-finnewcat]{border-style:dashed;color:var(--ink-faint)}
 
 /* ---------- Toast ---------- */
 #toast{
@@ -994,7 +995,10 @@ function seedState(){
    month so the low-point/checkpoint logic has something to show. */
 function seedFinance(T){
   const accChecking = uid(), accCash = uid();
-  const catRent = uid(), catSubs = uid(), catGroceries = uid(), catTransport = uid(), catSalary = uid(), catOther = uid();
+  const categories = finDefaultCategories();
+  const byName = n => categories.find(c=>c.name===n).id;
+  const catRent = byName('Rent'), catSubs = byName('Subscriptions'), catGroceries = byName('Groceries'),
+        catTransport = byName('Transport'), catSalary = byName('Salary'), catOther = byName('Other');
   const monthStart = T.slice(0,8)+'01';
   return {
     view: 'cashflow',
@@ -1004,14 +1008,7 @@ function seedFinance(T){
       {id:accChecking, name:'Checking', icon:'🏦', color:'#5a7dde', startBalance:1240, archived:false},
       {id:accCash,     name:'Cash',     icon:'💵', color:'#12a594', startBalance:80,   archived:false}
     ],
-    categories: [
-      {id:catRent,       name:'Rent',         icon:'🏠', color:'#e8384f', kind:'expense'},
-      {id:catSubs,       name:'Subscriptions', icon:'📺', color:'#7c4fd1', kind:'expense'},
-      {id:catGroceries,  name:'Groceries',    icon:'🛒', color:'#e08c00', kind:'expense'},
-      {id:catTransport,  name:'Transport',    icon:'🚗', color:'#0891b2', kind:'expense'},
-      {id:catOther,      name:'Other',        icon:'🔖', color:'#8a94a3', kind:'expense'},
-      {id:catSalary,     name:'Salary',       icon:'💼', color:'#12a594', kind:'income'}
-    ],
+    categories,
     transactions: [
       {id:uid(), accountId:accChecking, categoryId:catGroceries, kind:'expense', amount:64.2,  date:addDays(T,-3), note:'Weekly shop', recurringId:null},
       {id:uid(), accountId:accCash,     categoryId:catTransport, kind:'expense', amount:18,    date:addDays(T,-2), note:'Metro card top-up', recurringId:null},
@@ -2632,19 +2629,27 @@ async function sbUpdateRecurring(id, patch){ await sbRequest('PATCH', `/fin_recu
 async function sbDeleteRecurring(id){ await sbRequest('DELETE', `/fin_recurring?id=eq.${id}`, null, finHdr()); }
 async function sbUpsertBudget(ym, categoryId, amount){ await sbRequest('POST', '/fin_budgets', {ym, category_id:categoryId, amount}, finHdr({'Prefer':'resolution=merge-duplicates,return=minimal'})); }
 
-/* One-time bootstrap: if Supabase has nothing yet but this device has
-   local Finance data (the common first-run case — you'd already been
-   using the tab before it was backed by a database), push everything up
-   as the seed instead of silently discarding it. Safe because it only
-   fires when the remote tables are completely empty. */
-async function finPushAllLocal(){
-  for(const a of S.finance.accounts) await sbInsertAccount(a);
-  for(const c of S.finance.categories) await sbInsertCategory(c);
-  for(const r of S.finance.recurring) await sbInsertRecurring(r);
-  for(const t of S.finance.transactions) await sbInsertTransaction(t);
-  for(const ym of Object.keys(S.finance.budgets)){
-    for(const catId of Object.keys(S.finance.budgets[ym])) await sbUpsertBudget(ym, catId, S.finance.budgets[ym][catId]);
-  }
+/* Per-table safe merge, run on every refresh (not just the first one).
+   Never blindly overwrites a local array with an empty remote one — if
+   remote is missing rows for a table but this device has them locally,
+   those get pushed up instead. This is what makes the sync self-healing:
+   if an earlier push partially failed (e.g. accounts landed but
+   categories didn't), the very next refresh — on ANY device — repairs
+   the gap instead of propagating it by wiping local data to match. */
+async function finMergeTable(remoteRows, localRows, insertFn){
+  if(remoteRows.length){ return remoteRows; }
+  if(localRows.length){ await Promise.all(localRows.map(row => insertFn(row).catch(e => console.error('bootstrap push failed for', row.id, e)))); }
+  return localRows;
+}
+function finDefaultCategories(){
+  return [
+    {id:uid(), name:'Rent',          icon:'🏠', color:'#e8384f', kind:'expense'},
+    {id:uid(), name:'Subscriptions', icon:'📺', color:'#7c4fd1', kind:'expense'},
+    {id:uid(), name:'Groceries',     icon:'🛒', color:'#e08c00', kind:'expense'},
+    {id:uid(), name:'Transport',     icon:'🚗', color:'#0891b2', kind:'expense'},
+    {id:uid(), name:'Other',         icon:'🔖', color:'#8a94a3', kind:'expense'},
+    {id:uid(), name:'Salary',        icon:'💼', color:'#12a594', kind:'income'}
+  ];
 }
 function finApplyRemote(remote){
   S.finance.accounts = remote.accounts;
@@ -2667,14 +2672,20 @@ async function finRefresh(force){
     finUnlocked = true;
     const remote = await sbFetchFinanceAll();
     if(!remote) return;
-    const remoteEmpty = !remote.accounts.length && !remote.categories.length && !remote.transactions.length && !remote.recurring.length;
-    const localHasData = S.finance.accounts.length || S.finance.transactions.length || S.finance.recurring.length;
-    if(remoteEmpty && localHasData){
-      await finPushAllLocal();
-      if(force) toast('Uploaded your existing Finance data to Supabase');
-    } else {
-      finApplyRemote(remote);
+    remote.accounts = await finMergeTable(remote.accounts, S.finance.accounts, sbInsertAccount);
+    remote.categories = await finMergeTable(remote.categories, S.finance.categories, sbInsertCategory);
+    remote.recurring = await finMergeTable(remote.recurring, S.finance.recurring, sbInsertRecurring);
+    remote.transactions = await finMergeTable(remote.transactions, S.finance.transactions, sbInsertTransaction);
+    if(!Object.keys(remote.budgets).length && Object.keys(S.finance.budgets).length) remote.budgets = S.finance.budgets;
+    // Last-resort safety net: categories are required to add anything, so
+    // if they somehow ended up empty on both sides, seed a fresh default
+    // set rather than leaving the tab unusable.
+    if(!remote.categories.length){
+      remote.categories = finDefaultCategories();
+      await Promise.all(remote.categories.map(c => sbInsertCategory(c).catch(e=>console.error(e))));
+      if(force) toast('Categories were missing — restored the default set');
     }
+    finApplyRemote(remote);
     save();
     if(S.view==='finance') render();
   }catch(e){ console.error('finance refresh failed', e); if(force) toast('Finance sync failed — see console'); }
@@ -3464,6 +3475,19 @@ function closeFinPopup(){
 }
 function finExpenseCats(){ return S.finance.categories.filter(c=>c.kind==='expense'); }
 function finIncomeCats(){ return S.finance.categories.filter(c=>c.kind==='income'); }
+/* Create a category on the fly from inside either popup's picker — Ivy
+   Wallet lets you do this rather than forcing a fixed list, and it's also
+   the escape hatch if categories are ever empty for any reason. */
+function finQuickAddCategory(kind){
+  const name = prompt('New category name');
+  if(!name || !name.trim()) return null;
+  const icon = prompt('Icon (paste an emoji, or leave blank)', '🔖') || '🔖';
+  const c = {id:uid(), name:name.trim(), icon, color:null, kind};
+  S.finance.categories.push(c);
+  save();
+  sbInsertCategory(c).catch(e => { console.error(e); S.finance.categories = S.finance.categories.filter(x=>x.id!==c.id); save(); toast('Could not sync the new category — check your connection'); });
+  return c;
+}
 
 /* Add/edit transaction — Ivy-Wallet-style quick add: kind tabs, amount,
    account (+ a second account for transfers), category picker, date, note. */
@@ -3475,7 +3499,8 @@ function openTransactionPopup(prefillDate){
   scrim.id = 'finPopupScrim';
   const accOptions = S.finance.accounts.filter(a=>!a.archived).map(a=>`<option value="${a.id}">${esc(a.icon)} ${esc(a.name)}</option>`).join('');
   const renderCats = () => (kind==='income'?finIncomeCats():finExpenseCats())
-    .map(c=>`<button type="button" class="fin-cat-pick" data-fincat="${c.id}" style="color:${finCatColor(c)}">${esc(c.icon)} ${esc(c.name)}</button>`).join('') || '<span class="empty-note">No categories yet</span>';
+    .map(c=>`<button type="button" class="fin-cat-pick" data-fincat="${c.id}" style="color:${finCatColor(c)}">${esc(c.icon)} ${esc(c.name)}</button>`).join('')
+    + `<button type="button" class="fin-cat-pick" data-finnewcat="1">+ New</button>`;
   scrim.innerHTML = `<div class="fin-popup">
     <h3>New transaction</h3>
     <div class="fin-kind-tabs" id="finKindTabs">
@@ -3505,6 +3530,16 @@ function openTransactionPopup(prefillDate){
       document.querySelectorAll('#ftCatPicker [data-fincat]').forEach(x=>x.classList.remove('active'));
       b.classList.add('active');
     }));
+    const newCatBtn = document.querySelector('#ftCatPicker [data-finnewcat]');
+    if(newCatBtn) newCatBtn.addEventListener('click', () => {
+      const c = finQuickAddCategory(kind);
+      if(!c) return;
+      document.getElementById('ftCatPicker').innerHTML = renderCats();
+      wireCatPicker();
+      selectedCat = c.id;
+      const btn = document.querySelector(`#ftCatPicker [data-fincat="${c.id}"]`);
+      if(btn) btn.classList.add('active');
+    });
   }
   wireCatPicker();
 
@@ -3579,7 +3614,8 @@ function openRecurringPopup(){
   scrim.id = 'finPopupScrim';
   const accOptions = S.finance.accounts.filter(a=>!a.archived).map(a=>`<option value="${a.id}">${esc(a.icon)} ${esc(a.name)}</option>`).join('');
   const renderCats = () => (kind==='income'?finIncomeCats():finExpenseCats())
-    .map(c=>`<button type="button" class="fin-cat-pick" data-fincat="${c.id}" style="color:${finCatColor(c)}">${esc(c.icon)} ${esc(c.name)}</button>`).join('') || '<span class="empty-note">No categories yet</span>';
+    .map(c=>`<button type="button" class="fin-cat-pick" data-fincat="${c.id}" style="color:${finCatColor(c)}">${esc(c.icon)} ${esc(c.name)}</button>`).join('')
+    + `<button type="button" class="fin-cat-pick" data-finnewcat="1">+ New</button>`;
   scrim.innerHTML = `<div class="fin-popup">
     <h3>New recurring bill / income</h3>
     <div class="field"><label>Title</label><input id="frTitle" type="text" placeholder="e.g. Rent"></div>
@@ -3612,6 +3648,16 @@ function openRecurringPopup(){
       document.querySelectorAll('#frCatPicker [data-fincat]').forEach(x=>x.classList.remove('active'));
       b.classList.add('active');
     }));
+    const newCatBtn = document.querySelector('#frCatPicker [data-finnewcat]');
+    if(newCatBtn) newCatBtn.addEventListener('click', () => {
+      const c = finQuickAddCategory(kind);
+      if(!c) return;
+      document.getElementById('frCatPicker').innerHTML = renderCats();
+      wireCatPicker();
+      selectedCat = c.id;
+      const btn = document.querySelector(`#frCatPicker [data-fincat="${c.id}"]`);
+      if(btn) btn.classList.add('active');
+    });
   }
   wireCatPicker();
   document.querySelectorAll('#finRecKindTabs [data-finkind]').forEach(b => b.addEventListener('click', () => {
