@@ -32,7 +32,7 @@
   font-size:15px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+html,body{height:100%;overflow-x:hidden}
 body{
   font-family:'Instrument Sans',system-ui,sans-serif;
   background:var(--paper);color:var(--ink);
@@ -44,7 +44,7 @@ input,select,textarea{font:inherit;color:inherit}
 
 /* ---------- Top bar ---------- */
 header.topbar{
-  display:flex;align-items:center;gap:14px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:8px;
   padding:12px 20px;background:var(--ink);color:#f4f6f9;
   position:sticky;top:0;z-index:40;
 }
@@ -52,7 +52,7 @@ header.topbar{
 .logo .dot{width:11px;height:11px;border-radius:50% 50% 48% 48%;background:#6cc04a;box-shadow:0 0 0 4px rgba(108,192,74,.22);position:relative}
 .logo .dot::after{content:"";position:absolute;top:-4px;left:55%;width:6px;height:4px;border-radius:60% 40% 60% 40%;background:#3f8f2f}
 .topbar .sub{font-size:.78rem;color:#9aa7b6;font-weight:400}
-.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;row-gap:6px}
 .chip-btn{
   font-size:.78rem;font-weight:600;padding:6px 12px;border-radius:99px;
   background:rgba(255,255,255,.1);color:#e7ecf2;transition:background .15s;
@@ -81,6 +81,11 @@ header.topbar{
   padding:14px 20px 10px;
 }
 .view-tabs{display:flex;background:#eceff3;border-radius:99px;padding:3px}
+.view-tabs,.fin-subtabs,.book-subtabs,.rm-range-tabs{
+  min-width:0;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.view-tabs::-webkit-scrollbar,.fin-subtabs::-webkit-scrollbar,.book-subtabs::-webkit-scrollbar,.rm-range-tabs::-webkit-scrollbar{display:none}
+.view-tabs button,.fin-subtabs button,.book-subtabs button,.rm-range-tabs button{flex-shrink:0}
 .view-tabs button{
   padding:7px 16px;border-radius:99px;font-size:.85rem;font-weight:600;color:var(--ink-soft);
   transition:all .15s;
@@ -111,6 +116,11 @@ header.topbar{
 .quickadd .add-btn:hover{filter:brightness(1.06)}
 
 main{padding:8px 20px 60px;max-width:1200px;margin:0 auto}
+@media(max-width:420px){
+  main{padding:8px 12px 60px}
+  .quickadd,.toolbar{padding-left:12px;padding-right:12px}
+  header.topbar{padding:12px 14px}
+}
 
 /* ---------- List view ---------- */
 .section-block{margin-bottom:22px}
@@ -149,7 +159,7 @@ main{padding:8px 20px 60px;max-width:1200px;margin:0 auto}
 .empty-note{font-size:.82rem;color:var(--ink-faint);padding:8px 4px}
 
 /* ---------- Board view ---------- */
-.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;align-items:start}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:14px;align-items:start}
 .board-col{background:#eef0f4;border-radius:14px;padding:10px;min-height:120px}
 .board-col.dragover{outline:2px dashed var(--accent);outline-offset:-2px}
 .board-col h3{font-family:'Sora';font-size:.84rem;font-weight:600;padding:4px 6px 10px;display:flex;gap:6px;align-items:center}
@@ -344,7 +354,7 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
 .book-subtabs{display:flex;background:#eceff3;border-radius:99px;padding:3px;margin-bottom:16px;width:fit-content}
 .book-subtabs button{padding:7px 16px;border-radius:99px;font-size:.82rem;font-weight:600;color:var(--ink-soft)}
 .book-subtabs button.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
-.evt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:18px}
+.evt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:14px;margin-bottom:18px}
 .evt-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;position:relative}
 .evt-card.inactive{opacity:.5}
 .evt-card .evt-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:7px}
@@ -417,7 +427,7 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
 .pub-date-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .pub-date-btn.active .d{color:#fde4e1}
 .pub-date-btn:disabled{opacity:.3;cursor:not-allowed}
-.pub-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.pub-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(84px,100%),1fr));gap:8px}
 .pub-slot-btn{
   padding:9px 4px;border-radius:9px;border:1px solid var(--line);font-size:.82rem;font-weight:600;
   color:var(--ink-soft);background:var(--card);
@@ -450,7 +460,7 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
 }
 .today-focus .label{font-family:'Sora';font-size:.66rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
 .today-focus .text{font-size:1.02rem;font-weight:600;margin-top:4px}
-.today-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.today-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:16px}
 .today-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
 .today-card h3{font-family:'Sora';font-size:.88rem;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .today-card h3 .count{font-weight:500;color:var(--ink-faint);font-size:.76rem}
@@ -463,7 +473,8 @@ body.drawer-open .drawer-scrim{opacity:1;pointer-events:auto}
 /* ---------- Table view ---------- */
 .table-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
 .table-toolbar select{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:.82rem;background:var(--card)}
-table.data-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px}
+table.data-table{width:100%;min-width:560px;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 table.data-table th{
   text-align:left;font-family:'Sora';font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
   color:var(--ink-soft);padding:10px 12px;background:var(--paper);cursor:pointer;user-select:none;white-space:nowrap;
@@ -526,7 +537,7 @@ body.ai-open #aiPanel{display:flex}
 .rm-range-tabs{display:flex;background:#eceff3;border-radius:99px;padding:3px}
 .rm-range-tabs button{padding:7px 14px;border-radius:99px;font-size:.82rem;font-weight:600;color:var(--ink-soft);transition:all .15s}
 .rm-range-tabs button.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
-.roadmap-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.roadmap-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
 .roadmap-header{display:flex}
 .rm-label-head{width:190px;flex-shrink:0;border-bottom:1px solid var(--line)}
 .rm-months-head{flex:1;display:flex;border-bottom:1px solid var(--line)}
@@ -580,7 +591,7 @@ body.ai-open #aiPanel{display:flex}
 .fin-subtabs button{padding:7px 16px;border-radius:99px;font-size:.82rem;font-weight:600;color:var(--ink-soft)}
 .fin-subtabs button.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
 .fin-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.fin-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.fin-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(120px,100%),1fr));gap:10px;margin-bottom:16px}
 .fin-tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .fin-tile .fin-tile-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:4px}
 .fin-tile .fin-tile-val{font-family:'Sora';font-size:1.15rem;font-weight:700}
@@ -609,7 +620,7 @@ body.ai-open #aiPanel{display:flex}
 .fin-proj-row.low .fin-proj-bar{background:var(--hi)}
 .fin-proj-row .fin-proj-amt{width:76px;text-align:right;font-weight:700;font-family:'Sora'}
 .fin-proj-row.low .fin-proj-amt{color:var(--hi)}
-.fin-acct-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:16px}
+.fin-acct-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:14px;margin-bottom:16px}
 .fin-acct-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
 .fin-acct-card .fin-acct-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .fin-acct-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
@@ -627,7 +638,7 @@ body.ai-open #aiPanel{display:flex}
 .fin-tx-amt.expense{color:var(--hi)}
 .fin-tx-amt.income{color:var(--sync)}
 .fin-tx-amt.transfer{color:var(--lo)}
-.fin-rec-row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.fin-rec-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;row-gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
 .fin-rec-row.inactive{opacity:.5}
 .fin-rec-row .fin-rec-main{flex:1;min-width:0}
 .fin-rec-row .fin-rec-title{font-weight:600;font-size:.9rem}
@@ -1033,15 +1044,21 @@ const gAuth = { tokenClient:null, accessToken:null, expiresAt:0, pendingResolve:
 const DRIVE_FILE_NAME = 'asana-demo-state.json';
 let driveSaveTimer = null;
 
-async function init(){
-  S = await store.load() || seedState();
-  startAutoSync();
-  if(!S.calMonth) S.calMonth = todayISO().slice(0,7);
+/* All the "does this state have every field in the current shape" checks,
+   pulled into one reusable function. Called after loading local state AND
+   after driveMergeOnLoad() replaces S wholesale with a remote blob — that
+   second call site is the one that was missing before: a Drive blob saved
+   by an older/different session could be missing or have malformed fields
+   (this is exactly what caused calMonth to go invalid and break the
+   Calendar tab), and skipping sanitization after that swap let it through
+   untouched. */
+function sanitizeState(){
   if(!S.google) S.google = {clientId:'', connected:false, lastSynced:null};
   if(!S.supabase) S.supabase = {url:'', anonKey:'', hostKey:''};
   if(!S.gemini) S.gemini = {apiKey:'', model:'gemini-2.5-flash-lite'};
   if(S.gemini.model==='gemini-2.0-flash') S.gemini.model = 'gemini-2.5-flash-lite'; // old default lost its free quota
-  if(S.rules && S.rules.allTasksToEvents===undefined) S.rules.allTasksToEvents = false;
+  if(!S.rules) S.rules = {highToEvent:true, completeMarks:true, allTasksToEvents:false};
+  if(S.rules.allTasksToEvents===undefined) S.rules.allTasksToEvents = false;
   if(S.supabase.hostKey===undefined) S.supabase.hostKey='';
   if(!S.eventTypes) S.eventTypes = [];
   if(!S.availability) S.availability = {timezone:'Europe/Copenhagen', minNoticeHours:12, dailyLimit:null,
@@ -1066,7 +1083,6 @@ async function init(){
   if(!S.finance.budgets) S.finance.budgets = {};
   if(!S.finance.view) S.finance.view = 'cashflow';
   if(!S.finance.cycleMonths) S.finance.cycleMonths = 1;
-  if(!S.finance.cycleStart) S.finance.cycleStart = todayISO().slice(0,7);
   // A fresh browser (e.g. your wife's phone, first time) has no Supabase
   // config of its own. Fall back to the public creds baked into this file
   // (BUILD_SUPABASE) so the Shared tab and public booking page work without
@@ -1075,7 +1091,21 @@ async function init(){
     S.supabase.url = S.supabase.url || BUILD_SUPABASE.url;
     S.supabase.anonKey = S.supabase.anonKey || BUILD_SUPABASE.anonKey;
   }
+  if(!Array.isArray(S.tasks)) S.tasks = [];
   S.tasks.forEach(t => { if(!Array.isArray(t.subtasks)) t.subtasks = []; if(t.repeat===undefined) t.repeat = null; });
+  // Every month-anchor field must be a clean 'YYYY-MM' string, full stop —
+  // this is the specific invariant that broke the Calendar tab, so it's
+  // checked explicitly rather than just relying on "was it set at all".
+  const validYM = v => typeof v==='string' && /^\d{4}-\d{2}$/.test(v);
+  if(!validYM(S.calMonth)) S.calMonth = todayISO().slice(0,7);
+  if(!validYM(S.roadmap.startMonth)) S.roadmap.startMonth = todayISO().slice(0,7);
+  if(!validYM(S.finance.cycleStart)) S.finance.cycleStart = todayISO().slice(0,7);
+}
+
+async function init(){
+  S = await store.load() || seedState();
+  startAutoSync();
+  sanitizeState();
   bindStatic();
   render();
   if(S.familyKey){
@@ -1414,6 +1444,7 @@ async function driveMergeOnLoad(){
     const remote = await res.json();
     remote.google = S.google; // keep local client id / connection flag authoritative
     S = remote;
+    sanitizeState(); // a blob from an older/different session may be missing or have malformed fields — never trust it blindly
     store.save(S);
     toast('Loaded newer state from Google Drive (another device)');
   } else {
@@ -1621,6 +1652,7 @@ function renderTable(){
       </select>
       <span style="font-size:.78rem;color:var(--ink-faint)">${rows.length} task${rows.length===1?'':'s'} · click a header to sort</span>
     </div>
+    <div class="table-scroll">
     <table class="data-table">
       <thead><tr>
         <th></th>
@@ -1642,7 +1674,8 @@ function renderTable(){
           </tr>`;
         }).join('') || `<tr><td colspan="6" class="empty-note">No tasks match this filter.</td></tr>`}
       </tbody>
-    </table>`;
+    </table>
+    </div>`;
 }
 
 function renderList(){
@@ -1938,6 +1971,7 @@ function renderRoadmap(){
   const rm = S.roadmap;
   const months = []; for(let i=0;i<rm.months;i++) months.push(monthAdd(rm.startMonth, i));
   const curYM = todayISO().slice(0,7);
+  const minRowWidth = 190 + rm.months*64; // label column + a readable minimum per month — forces horizontal scroll on narrow screens instead of shrinking text away
 
   const byTopic = {};
   S.tasks.forEach(t => {
@@ -1968,7 +2002,7 @@ function renderRoadmap(){
       title="${esc(e.title)} · ${fmtDue(e.date)}${e.endDate!==e.date?' → '+fmtDue(e.endDate):''}">${esc(e.title)}</button>`;
   }).join('');
   const calMonthCells = months.map(ym => `<div class="rm-month-cell ${ym===curYM?'rm-current':''}"></div>`).join('');
-  const calRow = `<div class="roadmap-row">
+  const calRow = `<div class="roadmap-row" style="min-width:${minRowWidth}px">
     <div class="rm-label"><span class="topic-dot" style="background:var(--gcal)"></span>📅 Calendar <span class="count">${visibleEvents.length}</span></div>
     <div class="rm-track rm-cal-track" id="rmCalTrack" style="height:${calTrackHeight}px">
       ${calMonthCells}
@@ -1998,7 +2032,7 @@ function renderRoadmap(){
       const cls = t.done ? 'rm-done' : `rm-p-${t.priority||'none'}`;
       return `<button class="rm-marker ${cls}" style="left:${pos.pct}%" data-id="${t.id}" title="${esc(t.title)} · due ${fmtDue(t.due)}"></button>`;
     }).join('');
-    return `<div class="roadmap-row">
+    return `<div class="roadmap-row" style="min-width:${minRowWidth}px">
       <div class="rm-label"><span class="topic-dot" style="background:${color}"></span>${esc(topic)} <span class="count">${openCount}/${tasks.length}</span></div>
       <div class="rm-track rm-task-track" data-topic="${esc(topic)}">
         ${monthCells}
@@ -2012,7 +2046,7 @@ function renderRoadmap(){
   }).join('') || `<div class="empty-note">No dated tasks yet — give a task a due date, or drag on the row below to create one.</div>`;
 
   const addTopicMonthCells = months.map(ym => `<div class="rm-month-cell ${ym===curYM?'rm-current':''}"></div>`).join('');
-  const addTopicRow = `<div class="roadmap-row">
+  const addTopicRow = `<div class="roadmap-row" style="min-width:${minRowWidth}px">
     <div class="rm-label" style="color:var(--ink-faint)">+ New topic</div>
     <div class="rm-track rm-task-track" data-topic="">
       ${addTopicMonthCells}
@@ -2035,7 +2069,7 @@ function renderRoadmap(){
       <span style="margin-left:auto;color:var(--ink-faint)">Drag the 📅 Calendar row for an event, or a topic row for a task — click anything existing to see its details</span>
     </div>
     <div class="roadmap-panel">
-      <div class="roadmap-header"><div class="rm-label-head"></div><div class="rm-months-head">${monthHeadCells}</div></div>
+      <div class="roadmap-header" style="min-width:${minRowWidth}px"><div class="rm-label-head"></div><div class="rm-months-head">${monthHeadCells}</div></div>
       <div class="roadmap-body">${calRow}${rows}${addTopicRow}</div>
     </div>
     ${undatedCount ? `<div class="empty-note">${undatedCount} task${undatedCount===1?'':'s'} without a due date ${undatedCount===1?'isn\u2019t':'aren\u2019t'} shown here — add a due date in the task drawer to place ${undatedCount===1?'it':'them'} on the timeline.</div>` : ''}
