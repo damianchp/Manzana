@@ -1109,7 +1109,7 @@ async function init(){
   bindStatic();
   render();
   if(S.familyKey){
-    sbIsFamily().then(ok => { familyUnlocked = !!ok; if(S.view==='shared') render(); });
+    refreshSharedTasks();
   }
   if(S.supabase.hostKey){
     finRefresh();
@@ -1706,18 +1706,30 @@ let familyUnlocked = false;
 function sharedTaskRow(t){
   const dueCls = !t.due ? '' : (t.due < todayISO() && !t.done ? 'overdue' : (t.due===todayISO() ? 'today':''));
   return `<div class="task-row ${t.done?'done':''}" data-sharedid="${t.id}" style="cursor:default">
-    <button class="checkbox ${t.done?'checked':''}" data-sharedcheck="${t.id}" aria-label="Complete task" ${familyUnlocked?'':'disabled'}>
+    <button class="checkbox ${t.done?'checked':''}" data-sharedcheck="${t.id}" aria-label="Complete task">
       <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.5 4.8 9 10 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
-    <span class="t-title" ${familyUnlocked?`data-sharededit="${t.id}" style="cursor:text"`:''}>${esc(t.title)}</span>
+    <span class="t-title" data-sharededit="${t.id}" style="cursor:text">${esc(t.title)}</span>
     ${t.priority?`<span class="pill p-${t.priority}">${PRI_LABEL[t.priority]}</span>`:''}
     ${t.addedBy?`<span class="pill project" title="Added by">${esc(t.addedBy)}</span>`:''}
     <span class="t-due ${dueCls}">${fmtDue(t.due)}</span>
-    ${familyUnlocked?`<button class="icon-btn" data-shareddel="${t.id}" title="Delete" style="width:22px;height:22px;min-width:22px">✕</button>`:''}
+    <button class="icon-btn" data-shareddel="${t.id}" title="Delete" style="width:22px;height:22px;min-width:22px">✕</button>
   </div>`;
 }
 
 function renderShared(){
+  if(!familyUnlocked){
+    return `<div class="avail-card">
+      <p style="font-size:.85rem;margin-bottom:10px">🔒 This list is private — enter the family key to view or edit it. Ask whoever set this up if you don't have it.</p>
+      <div class="grid2" style="margin-bottom:10px">
+        <div class="field"><label>Your name</label><input id="sharedMyName" type="text" placeholder="e.g. Catalina" value="${esc(S.myName)}"></div>
+        <div class="field"><label>Family key</label><input id="sharedFamilyKey" type="password" placeholder="Ask for the key"></div>
+      </div>
+      <button class="btn primary" id="btnUnlockShared">Unlock shared list</button>
+      ${sbConfigured() ? '' : '<p class="desc" style="margin-top:10px;font-size:.74rem;color:var(--hi)">No Supabase backend configured yet on this device — check the Sync tab.</p>'}
+    </div>`;
+  }
+
   const byTopic = {};
   S.sharedTasks.forEach(t => { const k = t.topic||'General'; (byTopic[k]||(byTopic[k]=[])).push(t); });
   const topics = Object.keys(byTopic).sort();
@@ -1727,31 +1739,18 @@ function renderShared(){
       <div class="section-head"><span class="topic-dot" style="background:${topicColor(topic)}"></span>${esc(topic)} <span class="count">${ts.length}</span></div>
       ${ts.map(sharedTaskRow).join('')}
     </div>`;
-  }).join('') || `<div class="empty-note">No shared tasks yet — ${familyUnlocked ? 'add one below.' : 'unlock editing below to add the first one.'}</div>`;
-
-  const gateHtml = familyUnlocked
-    ? `<div class="status-row" style="margin-bottom:14px">
-        <span class="status-dot on"></span>
-        <span style="font-size:.82rem;color:var(--ink-soft)">Unlocked as <b>${esc(S.myName||'you')}</b> — add, check off and delete freely.</span>
-        <button class="chip-btn" id="btnLockShared" style="background:#eef0f4;color:var(--ink)">Lock</button>
-      </div>`
-    : `<div class="avail-card" style="margin-bottom:14px">
-        <p style="font-size:.85rem;margin-bottom:10px">Anyone with this link can <b>view</b> this list. To add, check off, or delete tasks, enter the family key — ask whoever set this up if you don't have it.</p>
-        <div class="grid2" style="margin-bottom:10px">
-          <div class="field"><label>Your name</label><input id="sharedMyName" type="text" placeholder="e.g. Catalina" value="${esc(S.myName)}"></div>
-          <div class="field"><label>Family key</label><input id="sharedFamilyKey" type="password" placeholder="Ask for the key"></div>
-        </div>
-        <button class="btn primary" id="btnUnlockShared">Unlock editing</button>
-      </div>`;
-
-  const quickAdd = familyUnlocked ? `<div class="quickadd" style="padding:0 0 14px">
-      <input type="text" id="sharedQuickAdd" placeholder="Add a shared task… e.g. 'Buy diapers !high tomorrow #Household'">
-      <button class="add-btn" id="sharedQuickAddBtn">Add</button>
-    </div>` : '';
+  }).join('') || `<div class="empty-note">No shared tasks yet — add one below.</div>`;
 
   return `<div>
-    ${gateHtml}
-    ${quickAdd}
+    <div class="status-row" style="margin-bottom:14px">
+      <span class="status-dot on"></span>
+      <span style="font-size:.82rem;color:var(--ink-soft)">Unlocked as <b>${esc(S.myName||'you')}</b> — add, check off and delete freely.</span>
+      <button class="chip-btn" id="btnLockShared" style="background:#eef0f4;color:var(--ink)">Lock</button>
+    </div>
+    <div class="quickadd" style="padding:0 0 14px">
+      <input type="text" id="sharedQuickAdd" placeholder="Add a shared task… e.g. 'Buy diapers !high tomorrow #Household'">
+      <button class="add-btn" id="sharedQuickAddBtn">Add</button>
+    </div>
     <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
       <button class="chip-btn" id="btnRefreshShared" style="background:#eef0f4;color:var(--ink)">↻ Refresh</button>
     </div>
@@ -1785,13 +1784,24 @@ function sharedQuickAdd(text){
 
 /* Pull the latest shared list from Supabase. Supabase is the source of
    truth here (like bookings) — the local copy is just a cache so the UI
-   has something to show while a fetch is in flight. */
+   has something to show while a fetch is in flight. Reads now require the
+   family key just like writes do — verified via is_family() before any
+   fetch, same pattern as Finance's host-key gate. */
 let sharedSyncing = false;
 async function refreshSharedTasks(force){
   if(sharedSyncing) return;
-  if(!sbConfigured()){ if(force) toast('No shared backend configured — see Sync tab'); return; }
+  if(!sbConfigured()) return;
   sharedSyncing = true;
   try{
+    const ok = await sbIsFamily();
+    if(ok !== true){
+      familyUnlocked = false;
+      S.sharedTasks = [];
+      if(force) toast(ok===false ? 'Family key rejected — check it and try again' : 'Enter the family key to view the shared list');
+      if(S.view==='shared') render();
+      return;
+    }
+    familyUnlocked = true;
     const remote = await sbFetchSharedTasks();
     if(remote !== null){
       S.sharedTasks = remote; save();
@@ -2772,7 +2782,7 @@ function sbFamilyHeaders(){
 async function sbFetchSharedTasks(){
   if(!sbConfigured()) return null;
   try{
-    const rows = await sbRequest('GET', '/shared_tasks?select=*&order=done.asc,due.asc.nullslast');
+    const rows = await sbRequest('GET', '/shared_tasks?select=*&order=done.asc,due.asc.nullslast', null, sbFamilyHeaders());
     return rows.map(r => ({
       id:r.id, title:r.title, topic:r.topic||'General', priority:r.priority, due:r.due,
       done:r.done, addedBy:r.added_by||'', doneBy:r.done_by||'', createdAt:r.created_at
@@ -3857,14 +3867,12 @@ function wireDynamic(){
     if(!key){ toast('Enter the family key first'); return; }
     S.myName = name; S.familyKey = key; save();
     btnUnlockShared.disabled = true; btnUnlockShared.textContent = 'Checking…';
-    const ok = await sbIsFamily();
-    btnUnlockShared.disabled = false; btnUnlockShared.textContent = 'Unlock editing';
-    if(ok===true){ familyUnlocked = true; toast('Unlocked — you can now add and edit tasks'); render(); }
-    else if(ok===false){ toast('That key was rejected — double-check it with whoever set this up'); }
-    else{ toast('Could not verify the key right now — check your connection and try again'); }
+    await refreshSharedTasks(true);
+    btnUnlockShared.disabled = false; btnUnlockShared.textContent = 'Unlock shared list';
+    if(familyUnlocked){ toast('Unlocked'); render(); }
   });
   const btnLockShared = document.getElementById('btnLockShared');
-  if(btnLockShared) btnLockShared.addEventListener('click', () => { familyUnlocked = false; render(); });
+  if(btnLockShared) btnLockShared.addEventListener('click', () => { familyUnlocked = false; S.sharedTasks = []; render(); });
 
   // shared list — refresh + quick add
   const btnRefreshShared = document.getElementById('btnRefreshShared');
