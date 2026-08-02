@@ -586,6 +586,87 @@ body.ai-open #aiPanel{display:flex}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:600px){.grid2{grid-template-columns:1fr}}
 
+/* ---------- Notes tab (Obsidian-inspired: card gallery landing + a clean, quiet editor) ---------- */
+.notes-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.notes-search{flex:1;min-width:160px;border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;background:var(--card);font-size:.9rem}
+.notes-tagbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.notes-tag{font-size:.74rem;font-weight:600;padding:5px 11px;border-radius:99px;border:1.4px solid var(--line);background:var(--card);color:var(--ink-soft)}
+.notes-tag.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.notes-section-label{font-family:'Sora';font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);margin:4px 0 10px}
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:14px;margin-bottom:22px}
+.note-card{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;
+  transition:box-shadow .15s,border-color .15s,transform .1s;display:flex;flex-direction:column;min-height:150px;
+  position:relative;overflow:hidden;
+}
+.note-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--stripe,var(--line))}
+.note-card:hover{box-shadow:var(--shadow);border-color:#d3dae3;transform:translateY(-1px)}
+.note-card-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:.8rem;color:var(--ink-faint)}
+.note-card-kind{font-size:.95rem}
+.note-card-pin{margin-left:auto;color:var(--md);font-size:.85rem}
+.note-card-title{font-family:'Sora';font-weight:700;font-size:.98rem;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.note-card-preview{
+  flex:1;font-size:.82rem;color:var(--ink-soft);line-height:1.5;overflow:hidden;display:-webkit-box;
+  -webkit-line-clamp:4;-webkit-box-orient:vertical;white-space:pre-line;
+}
+.note-card-checklist-progress{font-size:.78rem;color:var(--ink-faint);margin-top:6px}
+.note-card-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.note-card-tags .notes-tag{padding:2px 8px;font-size:.68rem;pointer-events:none}
+.note-card-time{font-size:.7rem;color:var(--ink-faint);margin-top:8px}
+.note-card-new{
+  border:1.5px dashed var(--line);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;min-height:150px;color:var(--ink-faint);font-weight:600;font-size:.85rem;cursor:pointer;
+}
+.note-card-new:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.note-card-new .big{font-size:1.6rem}
+
+.note-empty{text-align:center;padding:60px 20px;color:var(--ink-faint)}
+.note-empty .big{font-size:2.2rem;margin-bottom:10px}
+
+.note-kind-choice{display:flex;gap:12px;margin:16px 0 4px}
+.note-kind-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 12px;
+  border:1.5px solid var(--line);border-radius:12px;background:var(--card);font-weight:600;font-size:.85rem;color:var(--ink-soft);
+}
+.note-kind-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.note-kind-btn .big{font-size:1.7rem}
+
+.note-editor{max-width:760px;margin:0 auto}
+.note-editor-head{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.note-editor-head .spacer{flex:1}
+.note-back{display:flex;align-items:center;gap:6px;font-weight:600;font-size:.85rem;color:var(--ink-soft);padding:7px 10px;border-radius:8px}
+.note-back:hover{background:var(--paper)}
+.note-kind-toggle{display:flex;background:#eceff3;border-radius:99px;padding:3px}
+.note-kind-toggle button{padding:6px 12px;border-radius:99px;font-size:.8rem;font-weight:600;color:var(--ink-soft)}
+.note-kind-toggle button.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.note-title-input{
+  width:100%;border:none;background:transparent;font-family:'Sora';font-weight:700;font-size:1.5rem;
+  color:var(--ink);padding:2px 0;margin-bottom:6px;
+}
+.note-title-input::placeholder{color:var(--ink-faint)}
+.note-meta-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.note-date-field{display:flex;align-items:center;gap:2px;font-size:.82rem;color:var(--ink-soft);background:var(--paper);border-radius:8px;padding:4px 8px}
+.note-date-field input[type=date]{border:none;background:transparent;font-size:.82rem;color:var(--ink-soft);padding:2px}
+.note-date-clear{color:var(--ink-faint);font-size:.78rem;padding:2px 5px;border-radius:6px;margin-left:2px}
+.note-date-clear:hover{color:var(--hi);background:var(--hi-bg)}
+.note-card-date{font-size:.7rem;font-weight:600;color:var(--ink-soft);background:var(--paper);padding:2px 8px;border-radius:99px;margin-left:auto}
+.note-tags-input{flex:1;min-width:140px;border:none;background:transparent;font-size:.82rem;color:var(--ink-soft);padding:4px 0}
+.note-tags-input::placeholder{color:var(--ink-faint)}
+.note-format-bar{display:flex;gap:4px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.note-format-bar button{
+  width:30px;height:30px;border-radius:7px;color:var(--ink-soft);font-weight:700;font-size:.85rem;font-family:'Sora';
+}
+.note-format-bar button:hover{background:var(--paper);color:var(--ink)}
+.note-body-textarea{
+  width:100%;min-height:340px;border:none;background:transparent;resize:none;outline:none;
+  font-family:'Instrument Sans',system-ui,sans-serif;font-size:.98rem;line-height:1.75;color:var(--ink);
+}
+.note-body-textarea::placeholder{color:var(--ink-faint)}
+.note-checklist-editor .sub-item{padding:8px 4px}
+.note-checklist-editor .sub-item .sub-text{font-size:.95rem}
+.note-footer-row{display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.note-footer-row .note-footer-meta{font-size:.74rem;color:var(--ink-faint)}
+
 /* ---------- Finance tab ---------- */
 .fin-subtabs{display:flex;background:#eceff3;border-radius:99px;padding:3px;margin-bottom:16px;width:fit-content;flex-wrap:wrap}
 .fin-subtabs button{padding:7px 16px;border-radius:99px;font-size:.82rem;font-weight:600;color:var(--ink-soft)}
@@ -697,6 +778,7 @@ body.ai-open #aiPanel{display:flex}
     <button data-view="roadmap" role="tab">Roadmap</button>
     <button data-view="today" class="active" role="tab">Today</button>
     <button data-view="list" role="tab">List</button>
+    <button data-view="notes" role="tab">Notes</button>
     <button data-view="shared" role="tab">Shared</button>
     <button data-view="table" role="tab">Table</button>
     <button data-view="board" role="tab">Board</button>
@@ -834,6 +916,7 @@ const store = {
 
 /* ---------- Helpers ---------- */
 const uid = () => Math.random().toString(36).slice(2,10);
+function debounce(fn, ms){ let t; return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), ms); }; }
 const pad = n => String(n).padStart(2,'0');
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const todayISO = () => iso(new Date());
@@ -995,7 +1078,35 @@ function seedState(){
       {id:uid(), title:'Review website analytics', project:'Work', priority:null, start:null, due:null, section:'recent', done:false, notes:''},
       {id:uid(), title:'Send thank-you note after the workshop', project:'Community', priority:'medium', start:null, due:addDays(T,-1), section:'today', done:false, notes:''}
     ],
-    finance: seedFinance(T)
+    finance: seedFinance(T),
+    notes: seedNotes(T)
+  };
+}
+
+/* Notes seed — one free-text note and one checklist, so the tab isn't
+   empty on first load. Obsidian-style: title, tags, plain body. */
+function seedNotes(T){
+  return {
+    activeId: null,
+    search: '',
+    tagFilter: null,
+    items: [
+      {
+        id:uid(), kind:'text', title:'Welcome to Notes',
+        body:'This is a free-text note — write whatever you like, formatted with simple markdown syntax (**bold**, *italic*, # headings, - bullets).\n\nClick the checklist icon above to convert this into a checklist any time, or start a new note as one from the gallery.',
+        items:[], tags:['welcome'], date:null, pinned:true, createdAt:T, updatedAt:T
+      },
+      {
+        id:uid(), kind:'checklist', title:'Packing list',
+        body:'',
+        items:[
+          {id:uid(), text:'Passport', done:true},
+          {id:uid(), text:'Charger', done:false},
+          {id:uid(), text:'Sunscreen', done:false}
+        ],
+        tags:['travel'], date:addDays(T,5), pinned:false, createdAt:T, updatedAt:T
+      }
+    ]
   };
 }
 
@@ -1083,6 +1194,18 @@ function sanitizeState(){
   if(!S.finance.budgets) S.finance.budgets = {};
   if(!S.finance.view) S.finance.view = 'cashflow';
   if(!S.finance.cycleMonths) S.finance.cycleMonths = 1;
+  if(!S.notes) S.notes = seedNotes(todayISO());
+  if(!Array.isArray(S.notes.items)) S.notes.items = [];
+  if(S.notes.activeId===undefined) S.notes.activeId = null;
+  if(S.notes.search===undefined) S.notes.search = '';
+  if(S.notes.tagFilter===undefined) S.notes.tagFilter = null;
+  S.notes.items.forEach(n => {
+    if(!Array.isArray(n.items)) n.items = [];
+    if(!Array.isArray(n.tags)) n.tags = [];
+    if(n.body===undefined) n.body = '';
+    if(n.pinned===undefined) n.pinned = false;
+    if(n.date===undefined) n.date = null;
+  });
   // A fresh browser (e.g. your wife's phone, first time) has no Supabase
   // config of its own. Fall back to the public creds baked into this file
   // (BUILD_SUPABASE) so the Shared tab and public booking page work without
@@ -1531,6 +1654,7 @@ function render(){
   if(S.view==='roadmap'){ m.innerHTML = renderRoadmap(); maybePullRoadmapEvents(); }
   else if(S.view==='today') m.innerHTML = renderToday();
   else if(S.view==='list') m.innerHTML = renderList();
+  else if(S.view==='notes') m.innerHTML = renderNotes();
   else if(S.view==='shared') m.innerHTML = renderShared();
   else if(S.view==='table') m.innerHTML = renderTable();
   else if(S.view==='board') m.innerHTML = renderBoard();
@@ -1875,6 +1999,7 @@ function renderCalendar(){
         <span class="key"><span class="swatch" style="background:var(--lo)"></span>Low</span>
         <span class="key"><span class="swatch" style="border:1.4px dashed var(--gcal);background:#fff"></span>Google Calendar event</span>
         <span class="key"><span class="swatch" style="background:#f0e9fb"></span>Booking (professional)</span>
+        <span class="key">🗒️ Note</span>
       </div>
       <div class="cal-grid">
         ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}
@@ -1884,9 +2009,11 @@ function renderCalendar(){
           const dayTasks = showPersonal ? S.tasks.filter(t => t.due===c.iso) : [];
           const dayEvents = showPersonal ? S.externalEvents.filter(e => e.date===c.iso) : [];
           const dayBookings = showPro ? S.bookings.filter(b => b.date===c.iso && b.status==='confirmed') : [];
+          const dayNotes = showPersonal ? S.notes.items.filter(n => n.date===c.iso) : [];
           return `<div class="cal-cell ${c.other?'other':''} ${c.iso===T?'today-cell':''}" data-date="${c.iso}">
             <span class="daynum">${c.d}</span>
             ${dayTasks.map(t=>`<button class="cal-chip p-${t.priority||'none'} ${t.done?'done':''}" draggable="true" data-id="${t.id}" title="${esc(t.title)}">${esc(t.title)}</button>`).join('')}
+            ${dayNotes.map(n=>{const c2=noteCardColor(n); return `<button class="cal-chip note" data-noteid="${n.id}" style="background:${c2}1f;color:${c2};border-color:${c2}55" title="${esc(n.title||'Untitled note')}">🗒️ ${esc(n.title||'Untitled note')}</button>`;}).join('')}
             ${dayEvents.map(e=>`<span class="cal-chip gcal-event" title="Lives on the external Google Calendar — created by a rule">${esc(e.title)}</span>`).join('')}
             ${dayBookings.map(b=>{const et=S.eventTypes.find(x=>x.id===b.eventTypeId); return `<button class="cal-chip booking" data-bkid="${b.id}" title="${esc((et?et.name:'Booking'))} with ${esc(b.inviteeName)} at ${b.start}">${b.start} ${esc(b.inviteeName)}</button>`;}).join('')}
           </div>`;
@@ -2419,6 +2546,202 @@ function renderFinanceBudgets(){
       <div class="fin-tile ${totalBudget-totalSpent<0?'bills':'income'}"><div class="fin-tile-label">Remaining</div><div class="fin-tile-val">$${(totalBudget-totalSpent).toFixed(0)}</div></div>
     </div>
     ${rows}`;
+}
+
+/* =====================================================================
+   NOTES — an Obsidian-flavored notes tab: a card-gallery landing (search,
+   tag filter, pinned-first) and a quiet, distraction-free editor. Each
+   note is either free text (light markdown syntax, not rendered — most
+   Obsidian users type raw markdown anyway) or a checklist, and you can
+   convert between the two at any time from the editor. Local + Drive
+   sync, same as tasks — no separate backend for this one.
+   ===================================================================== */
+function fmtRelative(ts){
+  if(!ts) return '';
+  const then = new Date(ts), now = new Date();
+  const diffMs = now - then;
+  const diffMin = Math.round(diffMs/60000);
+  if(diffMin < 1) return 'Just now';
+  if(diffMin < 60) return `${diffMin}m ago`;
+  const diffH = Math.round(diffMin/60);
+  if(diffH < 24) return `${diffH}h ago`;
+  const diffD = Math.round(diffH/24);
+  if(diffD === 1) return 'Yesterday';
+  if(diffD < 7) return `${diffD}d ago`;
+  return then.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+}
+function noteById(id){ return S.notes.items.find(n=>n.id===id) || null; }
+function noteAllTags(){
+  const set = new Set();
+  S.notes.items.forEach(n => n.tags.forEach(t=>set.add(t)));
+  return [...set].sort();
+}
+function noteChecklistProgress(n){
+  if(!n.items.length) return null;
+  return { done: n.items.filter(i=>i.done).length, total: n.items.length };
+}
+function noteCardColor(n){ return n.tags.length ? topicColor(n.tags[0]) : '#8a94a3'; }
+
+function openNote(id){ S.notes.activeId = id; save(); render(); }
+function closeNoteEditor(){ S.notes.activeId = null; save(); render(); }
+function touchNote(n){ n.updatedAt = new Date().toISOString(); save(); }
+
+/* Converting between kinds is the whole point of the toggle: text → each
+   non-empty line becomes a checklist item; checklist → markdown task
+   lines ("- [ ] " / "- [x] "), so nothing is lost either direction. */
+function convertNoteKind(n, toKind){
+  if(n.kind === toKind) return;
+  if(toKind === 'checklist'){
+    const lines = n.body.split('\n').map(l=>l.trim()).filter(Boolean);
+    n.items = lines.map(text => ({id:uid(), text:text.replace(/^-\s*\[[ x]\]\s*/i,''), done:/^-\s*\[x\]/i.test(text)}));
+    n.body = '';
+  } else {
+    n.body = n.items.map(i => `- [${i.done?'x':' '}] ${i.text}`).join('\n');
+    n.items = [];
+  }
+  n.kind = toKind;
+  touchNote(n);
+}
+
+function openNoteKindPopup(){
+  closeFinPopup(); // reuse the same generic popup scrim/id — only one popup is ever open at a time
+  const scrim = document.createElement('div');
+  scrim.className = 'fin-popup-scrim';
+  scrim.id = 'finPopupScrim';
+  scrim.innerHTML = `<div class="fin-popup">
+    <h3>New note</h3>
+    <div class="note-kind-choice">
+      <button type="button" class="note-kind-btn" id="btnNewNoteText"><span class="big">📝</span>Free text</button>
+      <button type="button" class="note-kind-btn" id="btnNewNoteChecklist"><span class="big">☑️</span>Checklist</button>
+    </div>
+  </div>`;
+  document.body.appendChild(scrim);
+  scrim.addEventListener('click', e => { if(e.target===scrim) closeFinPopup(); });
+  const makeNote = kind => {
+    const n = { id:uid(), kind, title:'', body:'', items:[], tags:[], date:null, pinned:false, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
+    S.notes.items.unshift(n);
+    closeFinPopup();
+    openNote(n.id);
+  };
+  document.getElementById('btnNewNoteText').addEventListener('click', () => makeNote('text'));
+  document.getElementById('btnNewNoteChecklist').addEventListener('click', () => makeNote('checklist'));
+}
+
+function renderNotes(){
+  return S.notes.activeId && noteById(S.notes.activeId) ? renderNoteEditor(noteById(S.notes.activeId)) : renderNotesLanding();
+}
+
+function renderNotesLanding(){
+  const q = S.notes.search.trim().toLowerCase();
+  const tagFilter = S.notes.tagFilter;
+  let items = S.notes.items.filter(n => {
+    if(tagFilter && !n.tags.includes(tagFilter)) return false;
+    if(!q) return true;
+    return n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q) || n.items.some(i=>i.text.toLowerCase().includes(q)) || n.tags.some(t=>t.toLowerCase().includes(q));
+  });
+  const pinned = items.filter(n=>n.pinned).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
+  const rest = items.filter(n=>!n.pinned).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
+
+  const card = n => {
+    const progress = n.kind==='checklist' ? noteChecklistProgress(n) : null;
+    const preview = n.kind==='checklist'
+      ? (n.items.slice(0,4).map(i=>`${i.done?'☑':'☐'} ${i.text}`).join('\n') || 'Empty checklist')
+      : (n.body || 'Empty note');
+    return `<div class="note-card" data-noteid="${n.id}" style="--stripe:${noteCardColor(n)}">
+      <div class="note-card-top">
+        <span class="note-card-kind">${n.kind==='checklist'?'☑️':'📝'}</span>
+        <span>${fmtRelative(n.updatedAt)}</span>
+        ${n.date?`<span class="note-card-date">📅 ${fmtDue(n.date)}</span>`:''}
+        ${n.pinned?'<span class="note-card-pin">📌</span>':''}
+      </div>
+      <div class="note-card-title">${esc(n.title||'Untitled note')}</div>
+      <div class="note-card-preview">${esc(preview)}</div>
+      ${progress?`<div class="note-card-checklist-progress">${progress.done}/${progress.total} done</div>`:''}
+      ${n.tags.length?`<div class="note-card-tags">${n.tags.map(t=>`<span class="notes-tag">#${esc(t)}</span>`).join('')}</div>`:''}
+    </div>`;
+  };
+
+  const allTags = noteAllTags();
+  const tagBar = allTags.length ? `<div class="notes-tagbar">
+    <button class="notes-tag ${!tagFilter?'active':''}" data-notetag="">All</button>
+    ${allTags.map(t=>`<button class="notes-tag ${tagFilter===t?'active':''}" data-notetag="${esc(t)}">#${esc(t)}</button>`).join('')}
+  </div>` : '';
+
+  const grid = (label, list) => list.length ? `
+    <div class="notes-section-label">${label}</div>
+    <div class="notes-grid">${list.map(card).join('')}</div>` : '';
+
+  const empty = !pinned.length && !rest.length;
+
+  return `<div>
+    <div class="notes-toolbar">
+      <input type="text" class="notes-search" id="notesSearch" placeholder="Search notes…" value="${esc(S.notes.search)}">
+    </div>
+    ${tagBar}
+    ${empty ? `<div class="note-empty"><div class="big">🗒️</div>${q||tagFilter ? 'No notes match.' : 'No notes yet — start your first one.'}</div>` : ''}
+    ${grid('Pinned', pinned)}
+    ${grid(pinned.length||empty?'All notes':'', rest)}
+    <div class="notes-grid">
+      <div class="note-card-new" id="btnNewNote"><span class="big">+</span>New note</div>
+    </div>
+  </div>`;
+}
+
+function renderNoteEditor(n){
+  const toolbarBtns = n.kind==='text' ? `<div class="note-format-bar">
+      <button type="button" data-notefmt="bold" title="Bold"><b>B</b></button>
+      <button type="button" data-notefmt="italic" title="Italic"><i>i</i></button>
+      <button type="button" data-notefmt="h1" title="Heading">H</button>
+      <button type="button" data-notefmt="bullet" title="Bullet list">•</button>
+    </div>` : '';
+
+  const body = n.kind==='checklist' ? `<div class="note-checklist-editor">
+      <div class="sub-progress-bar"><div class="fill" style="width:${n.items.length?Math.round(n.items.filter(i=>i.done).length/n.items.length*100):0}%"></div></div>
+      <div class="sub-list" id="noteChecklistList">
+        ${n.items.map(i => `<div class="sub-item ${i.done?'done':''}" data-nid="${i.id}">
+          <button class="checkbox ${i.done?'checked':''}" data-notecheck="${i.id}" aria-label="Toggle item">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.5 4.8 9 10 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <input class="sub-text" data-noteitemedit="${i.id}" value="${esc(i.text)}">
+          <button class="sub-del" data-noteitemdel="${i.id}" aria-label="Delete item">✕</button>
+        </div>`).join('')}
+      </div>
+      <div class="sub-add">
+        <input id="noteNewItemInput" type="text" placeholder="Add an item… (Enter)">
+        <button id="noteNewItemBtn">Add</button>
+      </div>
+    </div>`
+    : `${toolbarBtns}<textarea class="note-body-textarea" id="noteBodyTextarea" placeholder="Start writing…">${esc(n.body)}</textarea>`;
+
+  const wordCount = n.kind==='text' ? n.body.trim().split(/\s+/).filter(Boolean).length : n.items.length;
+  const wordLabel = n.kind==='text' ? `${wordCount} word${wordCount===1?'':'s'}` : `${wordCount} item${wordCount===1?'':'s'}`;
+
+  return `<div class="note-editor" data-noteid="${n.id}">
+    <div class="note-editor-head">
+      <button class="note-back" id="btnNoteBack">← All notes</button>
+      <div class="spacer"></div>
+      <div class="note-kind-toggle" id="noteKindToggle">
+        <button type="button" data-notekind="text" class="${n.kind==='text'?'active':''}">📝 Text</button>
+        <button type="button" data-notekind="checklist" class="${n.kind==='checklist'?'active':''}">☑️ Checklist</button>
+      </div>
+      <button class="icon-btn" id="btnNotePin" title="${n.pinned?'Unpin':'Pin'}">${n.pinned?'📌':'📍'}</button>
+      <button class="icon-btn" id="btnNoteDelete" title="Delete">🗑️</button>
+    </div>
+    <input class="note-title-input" id="noteTitleInput" placeholder="Untitled note" value="${esc(n.title)}">
+    <div class="note-meta-row">
+      <input class="note-tags-input" id="noteTagsInput" placeholder="Add tags, space or comma separated…" value="${esc(n.tags.join(', '))}">
+      <div class="note-date-field">
+        <span>📅</span>
+        <input type="date" id="noteDateInput" value="${n.date||''}" title="Show this note on the Calendar tab">
+        ${n.date?`<button class="note-date-clear" id="noteDateClear" title="Remove date">✕</button>`:''}
+      </div>
+    </div>
+    ${body}
+    <div class="note-footer-row">
+      <span class="note-footer-meta">${wordLabel}</span>
+      <span class="note-footer-meta">Edited ${fmtRelative(n.updatedAt)}</span>
+    </div>
+  </div>`;
 }
 
 function renderSync(){
@@ -3790,6 +4113,11 @@ function wireDynamic(){
     const et = S.eventTypes.find(x=>x.id===bk.eventTypeId);
     toast(`${et?et.name:'Booking'} · ${bk.start}–${bk.end} · ${bk.inviteeName}${bk.inviteeEmail?' ('+bk.inviteeEmail+')':''}`);
   }));
+  document.querySelectorAll('.cal-chip.note').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    S.view = 'notes';
+    openNote(b.dataset.noteid);
+  }));
   document.querySelectorAll('.cal-chip[data-id]').forEach(c => {
     c.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', c.dataset.id));
     c.addEventListener('click', () => openDrawer(c.dataset.id));
@@ -4000,6 +4328,111 @@ function wireDynamic(){
     S.finance.budgets[ym][catId] = amount;
     save(); render();
     sbUpsertBudget(ym, catId, amount).catch(e => { console.error(e); toast('Could not sync — check your connection'); });
+  }));
+
+  // notes — landing
+  const notesSearch = document.getElementById('notesSearch');
+  if(notesSearch){
+    const doSearch = debounce(v => { S.notes.search = v; save(); render(); }, 250);
+    notesSearch.addEventListener('input', () => doSearch(notesSearch.value));
+  }
+  document.querySelectorAll('[data-notetag]').forEach(b => b.addEventListener('click', () => {
+    S.notes.tagFilter = b.dataset.notetag || null; save(); render();
+  }));
+  document.querySelectorAll('[data-noteid]').forEach(card => {
+    if(card.classList.contains('note-editor')) return; // the editor root also carries data-noteid; only cards open on click
+    card.addEventListener('click', () => openNote(card.dataset.noteid));
+  });
+  const btnNewNote = document.getElementById('btnNewNote');
+  if(btnNewNote) btnNewNote.addEventListener('click', openNoteKindPopup);
+
+  // notes — editor
+  const btnNoteBack = document.getElementById('btnNoteBack');
+  if(btnNoteBack) btnNoteBack.addEventListener('click', closeNoteEditor);
+  const noteTitleInput = document.getElementById('noteTitleInput');
+  if(noteTitleInput){
+    const saveTitle = debounce(() => { const n = noteById(S.notes.activeId); if(!n) return; n.title = noteTitleInput.value; touchNote(n); }, 300);
+    noteTitleInput.addEventListener('input', saveTitle);
+  }
+  const noteTagsInput = document.getElementById('noteTagsInput');
+  if(noteTagsInput){
+    const saveTags = debounce(() => {
+      const n = noteById(S.notes.activeId); if(!n) return;
+      n.tags = noteTagsInput.value.split(/[,\s]+/).map(t=>t.trim()).filter(Boolean);
+      touchNote(n);
+    }, 400);
+    noteTagsInput.addEventListener('input', saveTags);
+  }
+  const noteDateInput = document.getElementById('noteDateInput');
+  if(noteDateInput) noteDateInput.addEventListener('change', () => {
+    const n = noteById(S.notes.activeId); if(!n) return;
+    n.date = noteDateInput.value || null;
+    touchNote(n); render();
+  });
+  const noteDateClear = document.getElementById('noteDateClear');
+  if(noteDateClear) noteDateClear.addEventListener('click', () => {
+    const n = noteById(S.notes.activeId); if(!n) return;
+    n.date = null; touchNote(n); render();
+  });
+  const noteBodyTextarea = document.getElementById('noteBodyTextarea');
+  if(noteBodyTextarea){
+    const saveBody = debounce(() => { const n = noteById(S.notes.activeId); if(!n) return; n.body = noteBodyTextarea.value; touchNote(n); }, 300);
+    noteBodyTextarea.addEventListener('input', saveBody);
+  }
+  document.querySelectorAll('[data-notefmt]').forEach(b => b.addEventListener('click', () => {
+    const ta = document.getElementById('noteBodyTextarea'); if(!ta) return;
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    const selected = ta.value.slice(start, end);
+    const wrap = { bold:['**','**'], italic:['*','*'], h1:['# ',''], bullet:['- ','']}[b.dataset.notefmt];
+    const inserted = wrap[1] ? wrap[0]+(selected||'text')+wrap[1] : wrap[0]+(selected||'');
+    ta.value = ta.value.slice(0,start) + inserted + ta.value.slice(end);
+    ta.focus(); ta.selectionStart = start + wrap[0].length; ta.selectionEnd = start + wrap[0].length + (selected||(wrap[1]?'text':'')).length;
+    const n = noteById(S.notes.activeId); if(n){ n.body = ta.value; touchNote(n); }
+  }));
+  const noteKindToggle = document.getElementById('noteKindToggle');
+  if(noteKindToggle) noteKindToggle.querySelectorAll('[data-notekind]').forEach(b => b.addEventListener('click', () => {
+    const n = noteById(S.notes.activeId); if(!n) return;
+    const toKind = b.dataset.notekind;
+    if(toKind===n.kind) return;
+    if(!confirm(toKind==='checklist' ? 'Convert to a checklist? Each line of text becomes an item.' : 'Convert to free text? Items become a markdown checklist.')) return;
+    convertNoteKind(n, toKind); render();
+  }));
+  const btnNotePin = document.getElementById('btnNotePin');
+  if(btnNotePin) btnNotePin.addEventListener('click', () => { const n = noteById(S.notes.activeId); if(!n) return; n.pinned = !n.pinned; save(); render(); });
+  const btnNoteDelete = document.getElementById('btnNoteDelete');
+  if(btnNoteDelete) btnNoteDelete.addEventListener('click', () => {
+    if(!confirm('Delete this note? This can\'t be undone.')) return;
+    S.notes.items = S.notes.items.filter(x=>x.id!==S.notes.activeId);
+    closeNoteEditor();
+  });
+  // notes — checklist items
+  const noteNewItemBtn = document.getElementById('noteNewItemBtn');
+  const noteNewItemInput = document.getElementById('noteNewItemInput');
+  if(noteNewItemBtn && noteNewItemInput){
+    const addItem = () => {
+      const text = noteNewItemInput.value.trim(); if(!text) return;
+      const n = noteById(S.notes.activeId); if(!n) return;
+      n.items.push({id:uid(), text, done:false});
+      touchNote(n); render();
+      const el = document.getElementById('noteNewItemInput'); if(el) el.focus();
+    };
+    noteNewItemBtn.addEventListener('click', addItem);
+    noteNewItemInput.addEventListener('keydown', e => { if(e.key==='Enter') addItem(); });
+  }
+  document.querySelectorAll('[data-notecheck]').forEach(b => b.addEventListener('click', () => {
+    const n = noteById(S.notes.activeId); if(!n) return;
+    const it = n.items.find(x=>x.id===b.dataset.notecheck); if(!it) return;
+    it.done = !it.done; touchNote(n); render();
+  }));
+  document.querySelectorAll('[data-noteitemedit]').forEach(inp => inp.addEventListener('change', () => {
+    const n = noteById(S.notes.activeId); if(!n) return;
+    const it = n.items.find(x=>x.id===inp.dataset.noteitemedit); if(!it) return;
+    it.text = inp.value.trim()||it.text; touchNote(n);
+  }));
+  document.querySelectorAll('[data-noteitemdel]').forEach(b => b.addEventListener('click', () => {
+    const n = noteById(S.notes.activeId); if(!n) return;
+    n.items = n.items.filter(x=>x.id!==b.dataset.noteitemdel);
+    touchNote(n); render();
   }));
 
   // sync view controls
@@ -4288,6 +4721,7 @@ function refreshBackground(){
   if(S.view==='roadmap') m.innerHTML = renderRoadmap();
   else if(S.view==='today') m.innerHTML = renderToday();
   else if(S.view==='list') m.innerHTML = renderList();
+  else if(S.view==='notes') m.innerHTML = renderNotes();
   else if(S.view==='shared') m.innerHTML = renderShared();
   else if(S.view==='table') m.innerHTML = renderTable();
   else if(S.view==='board') m.innerHTML = renderBoard();
